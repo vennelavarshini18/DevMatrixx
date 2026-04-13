@@ -25,6 +25,13 @@ from typing import Optional, Dict, Any, AsyncGenerator
 
 from stable_baselines3 import PPO
 
+# CRITICAL FIX: Add the 'ml' folder directly to sys.path so SB3 can find 'agent_model' during unpickling
+ml_dir = os.path.dirname(os.path.abspath(__file__))
+if ml_dir not in sys.path:
+    sys.path.insert(0, ml_dir)
+
+import agent_model
+
 
 class InferenceRunner:
     """
@@ -62,11 +69,11 @@ class InferenceRunner:
         # Create environment
         if use_real_env:
             try:
-                sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
                 from ml1.env import WarehouseEnv
                 self.env = WarehouseEnv(grid_size=grid_size)
                 print(f"🌍 Inference env: ML1's WarehouseEnv ({grid_size}×{grid_size})")
-            except ImportError:
+            except ImportError as e:
+                print(f"Failed to import real env: {e}")
                 from dummy_env import DummyWarehouseEnv
                 self.env = DummyWarehouseEnv(grid_size=grid_size, max_steps=max_steps)
                 print(f"🧪 Inference env: DummyWarehouseEnv ({grid_size}×{grid_size})")
@@ -75,10 +82,14 @@ class InferenceRunner:
             self.env = DummyWarehouseEnv(grid_size=grid_size, max_steps=max_steps)
             print(f"🧪 Inference env: DummyWarehouseEnv ({grid_size}×{grid_size})")
 
+        # We are intentionally keeping the environment at Stage 1 for the presentation.
+        # The AI only baked for 2 million steps, so it mastered the empty room (Stage 1).
+        # We don't want to force it into Stage 2 because the unfamiliar obstacles confuse it!
+
         print(f"✅ Agent loaded from {checkpoint_path}")
         print(f"   Grid: {grid_size}×{grid_size} | Device: {device} | Delay: {step_delay}s")
 
-    def predict(self, observation: np.ndarray, deterministic: bool = True) -> int:
+    def predict(self, observation: np.ndarray, deterministic: bool = False) -> int:
         """Given observation, return the best action."""
         action, _ = self.model.predict(observation, deterministic=deterministic)
         return int(action)
