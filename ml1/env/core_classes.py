@@ -1,9 +1,4 @@
-"""
-ML1 Core Classes
-=================
-Defines all grid entities: Agent, Goal, and Obstacles (Static, Patrol, RandomWalk).
-Also includes CurriculumTracker for automatic stage progression.
-"""
+
 
 import random
 from collections import deque
@@ -11,7 +6,7 @@ from typing import List, Tuple, Optional, Dict, Any
 
 
 class Agent:
-    """The RL agent (robot) navigating the warehouse grid."""
+    
 
     def __init__(self, x: int = 0, y: int = 0):
         self.x = x
@@ -19,15 +14,7 @@ class Agent:
         self.status = "moving"  # "moving", "blocked", "collided", "reached_goal"
 
     def move(self, action: int, grid_size: int) -> Tuple[int, int]:
-        """
-        Compute the new position after taking an action.
-        Does NOT update self.x/self.y — the environment decides if the move is valid.
         
-        Actions: 0=Up(y-1), 1=Down(y+1), 2=Left(x-1), 3=Right(x+1)
-        
-        Returns:
-            (new_x, new_y) — clamped to grid boundaries
-        """
         dx, dy = {0: (0, -1), 1: (0, 1), 2: (-1, 0), 3: (1, 0)}[action]
         new_x = self.x + dx
         new_y = self.y + dy
@@ -42,7 +29,7 @@ class Agent:
 
 
 class Goal:
-    """The target destination cell for the agent."""
+    
 
     def __init__(self, x: int = 0, y: int = 0):
         self.x = x
@@ -57,7 +44,7 @@ class Goal:
 # ---------------------------------------------------------------------------
 
 class StaticObstacle:
-    """A shelf or wall that never moves. Blocks a cell permanently."""
+    
 
     def __init__(self, obs_id: str, x: int, y: int):
         self.id = obs_id
@@ -74,10 +61,7 @@ class StaticObstacle:
 
 
 class PatrolObstacle:
-    """
-    A forklift that moves back and forth along a fixed path.
-    Defined by a list of waypoints it cycles through.
-    """
+    
 
     def __init__(self, obs_id: str, waypoints: List[Tuple[int, int]], speed: int = 1):
         """
@@ -131,9 +115,7 @@ class PatrolObstacle:
 
 
 class RandomWalkObstacle:
-    """
-    An unpredictable human worker that moves to a random adjacent cell each step.
-    """
+    
 
     def __init__(self, obs_id: str, x: int, y: int):
         self.id = obs_id
@@ -160,11 +142,7 @@ class RandomWalkObstacle:
 
 
 class CompetingRobot:
-    """
-    A competing robot that moves toward the same goal as the RL agent.
-    Creates competitive pressure in Stage 3 — if this robot reaches the goal
-    first, the RL agent's episode ends in failure.
-    """
+    
 
     def __init__(self, obs_id: str, x: int, y: int, goal_x: int, goal_y: int, speed: int = 2):
         """
@@ -224,12 +202,7 @@ class CompetingRobot:
 # ---------------------------------------------------------------------------
 
 class CurriculumTracker:
-    """
-    Tracks rolling success rate and manages automatic stage transitions.
-
-    Stage 1 → Stage 2: When rolling success rate >= 90% over last `window_size` episodes.
-    Stage 2 → Stage 3: Same threshold (optional).
-    """
+    
 
     def __init__(self, window_size: int = 100, advance_threshold: float = 0.90):
         self.window_size = window_size
@@ -240,19 +213,19 @@ class CurriculumTracker:
         self.total_episodes = 0
 
     def record(self, success: bool):
-        """Record whether an episode was successful (agent reached goal)."""
+        
         self.history.append(1 if success else 0)
         self.total_episodes += 1
 
     @property
     def success_rate(self) -> float:
-        """Current rolling success rate."""
+        
         if len(self.history) == 0:
             return 0.0
         return sum(self.history) / len(self.history)
 
     def should_advance(self) -> bool:
-        """Check if we should move to the next curriculum stage."""
+        
         if self.current_stage >= self.max_stage:
             return False
         if len(self.history) < self.window_size:
@@ -260,7 +233,7 @@ class CurriculumTracker:
         return self.success_rate >= self.advance_threshold
 
     def try_advance(self) -> bool:
-        """Advance stage if threshold met. Returns True if stage changed."""
+        
         if self.should_advance():
             self.current_stage += 1
             self.history.clear()  # Reset history for the new stage

@@ -1,6 +1,7 @@
 import { useRef, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
+import { Html } from '@react-three/drei'
 
 const SCALE = 100 / 15
 const CARDBOARD_COLORS = ['#C19A6B', '#A0785A', '#B8935A', '#D2A679']
@@ -29,9 +30,9 @@ function CardboardBox({ position, size, color, rotation = [0, 0, 0] }) {
 }
 
 /* ═══════════════════════════════════════════════════════════
-   STATIC → SHELF UNIT with cargo
+   STATIC → SHELF SEGMENT (1x1 tile)
    ═══════════════════════════════════════════════════════════ */
-function ShelfUnit({ x, y }) {
+function ShelfSegment({ x, y }) {
   // Random but deterministic box colors based on position
   const boxColors = useMemo(() => {
     const seed = x * 17 + y * 31
@@ -111,6 +112,34 @@ function ShelfUnit({ x, y }) {
           size={[2.2, 1.5, 2]}
           color={boxColors[5]}
         />
+      )}
+    </group>
+  )
+}
+
+/* ═══════════════════════════════════════════════════════════
+   STATIC → SHELF UNIT (Logical unit spanning WxH)
+   ═══════════════════════════════════════════════════════════ */
+function ShelfUnit({ x, y, w = 1, h = 1, category }) {
+  const segments = []
+  for (let i = 0; i < w; i++) {
+    for (let j = 0; j < h; j++) {
+      segments.push(<ShelfSegment key={`${i}-${j}`} x={x + i} y={y + j} />)
+    }
+  }
+
+  const centerX = x + (w - 1) / 2
+  const centerZ = y + (h - 1) / 2
+
+  return (
+    <group>
+      {segments}
+      {category && (
+        <Html position={[centerX * SCALE, 11, centerZ * SCALE]} center style={{ pointerEvents: 'none' }}>
+          <div className="px-3 py-1 bg-black/80 border border-emerald-500 rounded text-emerald-400 font-bold text-xs whitespace-nowrap shadow-[0_0_10px_rgba(16,185,129,0.3)]">
+            {category.toUpperCase()}
+          </div>
+        </Html>
       )}
     </group>
   )
@@ -399,7 +428,7 @@ export default function Obstacles({ obstacles }) {
       {obstacles.map((obs) => {
         switch (obs.type) {
           case 'static':
-            return <ShelfUnit key={obs.id} x={obs.x} y={obs.y} />
+            return <ShelfUnit key={obs.id} x={obs.x} y={obs.y} w={obs.w} h={obs.h} category={obs.category} />
           case 'patrol':
             return (
               <ForkLift

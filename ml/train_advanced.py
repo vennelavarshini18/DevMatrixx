@@ -29,22 +29,18 @@ from ml.train import RewardLoggerCallback
 # ──────────────────────────────────────────────
 
 class AdvancedWarehouseEnv(WarehouseEnv):
-    """
-    Subclasses the real ML1 environment to allow external enforcement of
-    the curriculum stage. This prevents SubprocVecEnv parallel CPUs from 
-    oscillating against each other.
-    """
+    
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._locked_stage = 2  # Start directly at Stage 2 !
 
     def force_stage(self, stage: int):
-        """Called by the Global Callback via vec_env.env_method()"""
+        
         self._locked_stage = stage
         self.curriculum.current_stage = stage
 
     def reset(self, seed=None, options=None):
-        # Guarantee the stage stays perfectly locked before any spawning happens
+        
         self.curriculum.current_stage = self._locked_stage
         obs, info = super().reset(seed=seed, options=options)
         self.curriculum.current_stage = self._locked_stage
@@ -54,21 +50,14 @@ class AdvancedWarehouseEnv(WarehouseEnv):
 def make_env(grid_size: int, max_steps: int):
     def _init():
         env = AdvancedWarehouseEnv(grid_size=grid_size)
-        # We don't overwrite max_steps globally to keep parity with original code, 
-        # but AdvancedWarehouseEnv honors its MAX_STEPS_PER_EPISODE
+        
         return Monitor(env)
     return _init
 
 
-# ──────────────────────────────────────────────
-# Global Curriculum Hub (Callback)
-# ──────────────────────────────────────────────
 
 class GlobalCurriculumCallback(BaseCallback):
-    """
-    Maintains the 'True' success rate across ALL CPUs by aggregating their results.
-    When ready, it broadcasts the rank-up command to all environments simultaneously.
-    """
+    
     def __init__(self, window_size=100, advance_threshold=0.90, verbose=1):
         super().__init__(verbose)
         self.history = deque(maxlen=window_size)
@@ -112,9 +101,7 @@ class GlobalCurriculumCallback(BaseCallback):
         return True
 
 
-# ──────────────────────────────────────────────
-# Resume Training
-# ──────────────────────────────────────────────
+
 
 def train_advanced(args):
     print(f"""

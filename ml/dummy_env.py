@@ -93,41 +93,18 @@ class DummyWarehouseEnv(gym.Env):
         return abs(self.agent_x - self.goal_x) + abs(self.agent_y - self.goal_y)
 
     def _spawn_obstacles(self):
-        """Spawn obstacles based on current curriculum stage."""
+        """Spawn the static warehouse shelf layout (always active)."""
         self.obstacles = []
 
-        if self.current_stage == 1:
-            return  # Empty room
-
-        # Stage 2+: mix of obstacle types
-        occupied = {(self.agent_x, self.agent_y), (self.goal_x, self.goal_y)}
-
-        # Static obstacles (5 in Stage 2)
-        for i in range(5):
-            pos = self._sample_free_position(occupied)
-            self.obstacles.append({
-                "id": f"s_{i}", "x": pos[0], "y": pos[1], "type": "static"
-            })
-            occupied.add(pos)
-
-        # Patrol obstacles (3 in Stage 2)
-        for i in range(3):
-            pos = self._sample_free_position(occupied)
-            dx = random.choice([-1, 0, 1])
-            dy = 0 if dx != 0 else random.choice([-1, 1])
-            self.obstacles.append({
-                "id": f"p_{i}", "x": pos[0], "y": pos[1],
-                "type": "patrol", "dx": dx, "dy": dy
-            })
-            occupied.add(pos)
-
-        # Random walk obstacles (2 in Stage 2)
-        for i in range(2):
-            pos = self._sample_free_position(occupied)
-            self.obstacles.append({
-                "id": f"r_{i}", "x": pos[0], "y": pos[1], "type": "random_walk"
-            })
-            occupied.add(pos)
+        # Static Warehouse Environment layout
+        # 1 in every 3 columns has shelves, leaving 2 rows of gaps front/back
+        shelf_id = 0
+        for x in range(2, self.grid_size - 1, 3):
+            for y in range(2, self.grid_size - 2):
+                self.obstacles.append({
+                    "id": f"s_{shelf_id}", "x": x, "y": y, "type": "static"
+                })
+                shelf_id += 1
 
     def _sample_free_position(self, occupied):
         while True:
@@ -194,15 +171,16 @@ class DummyWarehouseEnv(gym.Env):
         self._total_episodes += 1
         self.episode_count = self._total_episodes
 
-        # Random agent start
-        positions = random.sample(
-            [(x, y) for x in range(self.grid_size) for y in range(self.grid_size)],
-            2
-        )
-        self.agent_x, self.agent_y = positions[0]
-        self.goal_x, self.goal_y = positions[1]
-
         self._spawn_obstacles()
+
+        # Random agent and goal start in free spaces
+        occupied = {(obs["x"], obs["y"]) for obs in self.obstacles}
+        agent_pos = self._sample_free_position(occupied)
+        occupied.add(agent_pos)
+        self.agent_x, self.agent_y = agent_pos
+        
+        goal_pos = self._sample_free_position(occupied)
+        self.goal_x, self.goal_y = goal_pos
         self.current_step = 0
         self.episode_reward = 0.0
         self.agent_status = "moving"

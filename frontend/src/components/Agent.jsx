@@ -30,11 +30,9 @@ export default function Agent({ x, y, status }) {
     const oldX = currentPos.current.x
     const oldZ = currentPos.current.z
 
-    // Lerp position
     currentPos.current.lerp(targetPos, 0.15)
     groupRef.current.position.copy(currentPos.current)
 
-    // Calculate movement direction & rotate chassis
     const dx = currentPos.current.x - oldX
     const dz = currentPos.current.z - oldZ
     if (Math.abs(dx) > 0.001 || Math.abs(dz) > 0.001) {
@@ -42,13 +40,13 @@ export default function Agent({ x, y, status }) {
       currentAngle.current += (targetAngle - currentAngle.current) * 0.1
       groupRef.current.rotation.y = currentAngle.current
 
-      // Slight forward tilt when moving
+     
       groupRef.current.rotation.x = -0.08
     } else {
       groupRef.current.rotation.x *= 0.95
     }
 
-    // Spinning sensor dome
+    
     if (domeRef.current) {
       domeRef.current.rotation.y += 0.02
     }
@@ -56,7 +54,7 @@ export default function Agent({ x, y, status }) {
     prevPos.current.copy(currentPos.current)
   })
 
-  const t = 0 // initial — useFrame handles animation
+  const t = 0 
 
   return (
     <group ref={groupRef} position={[x * SCALE, 0, y * SCALE]}>

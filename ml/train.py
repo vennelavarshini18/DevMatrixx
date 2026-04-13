@@ -1,28 +1,4 @@
-"""
-ML2 — Training Script for Warehouse RL Agent
-==============================================
-Full training pipeline aligned with ML1's WarehouseEnv contract.
 
-Features:
-  - Custom CNN policy (from agent_model.py)
-  - TensorBoard logging with reward/curriculum/episode metrics
-  - Periodic checkpointing
-  - Curriculum monitoring (reads ML1's info dict, doesn't duplicate logic)
-  - Hyperparameter CLI args for sweeps
-
-Usage:
-  # Quick smoke test (uses dummy env)
-  python train.py --timesteps 10000 --grid_size 15
-
-  # Hyperparameter mini-bake
-  python train.py --timesteps 50000 --lr 3e-4 --ent_coef 0.01 --run_name sweep_1
-
-  # With ML1's real env
-  python train.py --timesteps 100000 --real_env --run_name test_real
-
-  # OVERNIGHT BAKE 🔥
-  python train.py --timesteps 2000000 --grid_size 15 --lr <best> --ent_coef <best> --run_name overnight_bake --real_env
-"""
 
 import os
 import sys
@@ -49,11 +25,7 @@ from agent_model import POLICY_KWARGS
 
 
 class CurriculumMonitorCallback(BaseCallback):
-    """
-    Monitors curriculum stage from ML1's info dict.
-    ML1 handles the actual stage transitions internally.
-    This callback just LOGS the state to TensorBoard.
-    """
+    
 
     def __init__(self, verbose: int = 1):
         super().__init__(verbose)
@@ -92,7 +64,7 @@ class CurriculumMonitorCallback(BaseCallback):
 
 
 class RewardLoggerCallback(BaseCallback):
-    """Logs detailed reward stats to TensorBoard every N steps."""
+    
 
     def __init__(self, log_freq: int = 1000, verbose: int = 0):
         super().__init__(verbose)
@@ -144,12 +116,7 @@ class RewardLoggerCallback(BaseCallback):
 
 
 def make_env(grid_size: int, max_steps: int, use_real_env: bool = False):
-    """
-    Create the environment.
-    Set use_real_env=True when ML1's code is available.
     
-    Import path for ML1's real env: from ml1.env import WarehouseEnv
-    """
     def _init():
         if use_real_env:
             try:

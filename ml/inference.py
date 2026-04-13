@@ -71,22 +71,21 @@ class InferenceRunner:
             try:
                 from ml1.env import WarehouseEnv
                 self.env = WarehouseEnv(grid_size=grid_size)
-                print(f"🌍 Inference env: ML1's WarehouseEnv ({grid_size}×{grid_size})")
+                print(f"Inference env: ML1's WarehouseEnv ({grid_size}x{grid_size})")
             except ImportError as e:
                 print(f"Failed to import real env: {e}")
                 from dummy_env import DummyWarehouseEnv
                 self.env = DummyWarehouseEnv(grid_size=grid_size, max_steps=max_steps)
-                print(f"🧪 Inference env: DummyWarehouseEnv ({grid_size}×{grid_size})")
+                print(f"Inference env: DummyWarehouseEnv ({grid_size}x{grid_size})")
         else:
             from dummy_env import DummyWarehouseEnv
             self.env = DummyWarehouseEnv(grid_size=grid_size, max_steps=max_steps)
-            print(f"🧪 Inference env: DummyWarehouseEnv ({grid_size}×{grid_size})")
+            print(f"Inference env: DummyWarehouseEnv ({grid_size}x{grid_size})")
 
-        # We are intentionally keeping the environment at Stage 1 for the presentation.
-        # The AI only baked for 2 million steps, so it mastered the empty room (Stage 1).
-        # We don't want to force it into Stage 2 because the unfamiliar obstacles confuse it!
+        # Force Stage 2: static warehouse shelves with collision penalties
+        self.env.curriculum.current_stage = 2
 
-        print(f"✅ Agent loaded from {checkpoint_path}")
+        print(f"Agent loaded from {checkpoint_path}")
         print(f"   Grid: {grid_size}×{grid_size} | Device: {device} | Delay: {step_delay}s")
 
     def predict(self, observation: np.ndarray, deterministic: bool = False) -> int:

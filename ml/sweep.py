@@ -1,13 +1,4 @@
-"""
-ML2 — Hyperparameter Sweep Script
-===================================
-Runs 5 quick mini-bakes to find the best lr + entropy combo.
-Each run does 50k steps (~5 min). Check TensorBoard after all 5 finish.
 
-Usage:
-  python sweep.py              # Run all 5 sweeps sequentially
-  python sweep.py --quick      # Run shorter 10k step sweeps (~1 min each)
-"""
 
 import subprocess
 import sys
