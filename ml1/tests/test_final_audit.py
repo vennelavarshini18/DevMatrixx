@@ -1,19 +1,4 @@
-"""
-ML1 FINAL AUDIT — Complete Verification of ALL Phases 1, 2, 3
-================================================================
-This is the definitive test suite. If ALL tests pass, ML1 is production-ready
-and fully integrateable with ML2, BE, and FE.
 
-Tests are organized by the master schedule:
-  Phase 1: Environment foundation (grid, obs space, step/reset/render)
-  Phase 2: Reward shaping + curriculum (Stage 1, auto-advance)
-  Phase 3: Moving obstacles (Stage 2) + Competing robots (Stage 3)
-
-Integration checks:
-  - ML2 can import and wrap in SB3 PPO
-  - BE get_state() returns valid JSON for all 3 stages
-  - Observation shape/dtype/range is CNN-compatible
-"""
 
 import sys
 import io

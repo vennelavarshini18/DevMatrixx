@@ -1,14 +1,4 @@
-"""
-ML1 Smoke Test -- Phase 1 Validation
-=====================================
-Runs random actions on the WarehouseEnv to verify:
-1. reset() returns correct observation shape (3, 15, 15)
-2. step() runs 1000 times without crashing
-3. Observation values stay in [0, 255]
-4. info dict contains expected keys
-5. get_state() returns valid JSON-serializable dict
-6. check_env() from SB3 passes (Gymnasium compliance)
-"""
+
 
 import sys
 import io

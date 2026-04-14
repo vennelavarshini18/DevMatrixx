@@ -155,12 +155,12 @@ def train_advanced(args):
         reward_logger,
     ])
 
-    print(f"\n🚀 Training Stage 2 started at {datetime.now().strftime('%H:%M:%S')}")
+    print(f"\n Training Stage 2 started at {datetime.now().strftime('%H:%M:%S')}")
     model.learn(total_timesteps=args.timesteps, callback=callbacks, tb_log_name=run_dir, reset_num_timesteps=False)
     
     final_path = os.path.join(checkpoint_dir, "final_model_advanced")
     model.save(final_path)
-    print(f"✅ ADVANCED TRAINING COMPLETE. Model saved to {final_path}")
+    print(f" ADVANCED TRAINING COMPLETE. Model saved to {final_path}")
 
 
 if __name__ == "__main__":

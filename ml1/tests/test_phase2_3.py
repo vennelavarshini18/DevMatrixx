@@ -1,19 +1,4 @@
-"""
-ML1 Phase 2+3 Validation — Curriculum, Rewards & Obstacles
-=============================================================
-Tests:
-1. Reward correctness: moving closer gives positive reward, away gives negative
-2. Collision penalty fires correctly (-10, episode ends)
-3. Goal reward fires correctly (+100, episode ends)
-4. Wall bounce gives -1, agent stays in place
-5. Curriculum auto-advances from Stage 1 -> Stage 2 at 90% success
-6. Stage 2 spawns all 3 obstacle types
-7. Patrol obstacles move along their paths
-8. RandomWalk obstacles actually change position
-9. Post-move collision (obstacle walks into agent) detected
-10. get_state() is consistent across stages
-11. Full 5000-step stress test across curriculum transitions
-"""
+
 
 import sys
 import io
@@ -153,7 +138,7 @@ def test_curriculum_no_premature_advance():
     assert tracker.success_rate == 1.0  # All successes so far
     assert not tracker.should_advance(), "Should not advance with incomplete window"
 
-    print(f"✅ test_curriculum_no_premature_advance PASSED — Blocked until window full")
+    print(f" test_curriculum_no_premature_advance PASSED — Blocked until window full")
 
 
 def test_stage2_spawns_obstacles():

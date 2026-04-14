@@ -87,11 +87,11 @@ if __name__ == "__main__":
 
         features = model(dummy_obs_float)
         assert features.shape == (1, 256), f"Expected (1, 256), got {features.shape}"
-        print(f"  ✅ {label}: output shape {features.shape}")
+        print(f"   {label}: output shape {features.shape}")
 
     # Count params
     obs_space_15 = gym.spaces.Box(low=0, high=255, shape=(3, 15, 15), dtype=np.uint8)
     model_15 = WarehouseCNN(obs_space_15, features_dim=256)
     total_params = sum(p.numel() for p in model_15.parameters())
-    print(f"\n📊 Total parameters: {total_params:,}")
-    print("🎉 All sanity checks passed! CNN is grid-size agnostic.")
+    print(f"\n Total parameters: {total_params:,}")
+    print(" All sanity checks passed! CNN is grid-size agnostic.")

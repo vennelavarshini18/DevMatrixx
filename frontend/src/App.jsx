@@ -37,10 +37,10 @@ export default function App() {
     <div className="w-screen h-screen bg-black relative overflow-hidden">
       <WarehouseScene frameData={frameData} connectionStatus={connectionStatus} />
       <HUD frameData={frameData} speedMultiplier={speedMultiplier} onSpeedChange={setSpeedMultiplier} onBack={() => setCurrentView('store')} />
-      
+
       {/* Flash Overlay */}
-      <div 
-        className={`pointer-events-none absolute inset-0 transition-opacity duration-[600ms] ease-out z-[100] ${flashColor ? 'opacity-40 ' + flashColor : 'opacity-0 bg-transparent'}`} 
+      <div
+        className={`pointer-events-none absolute inset-0 transition-opacity duration-[600ms] ease-out z-[100] ${flashColor ? 'opacity-40 ' + flashColor : 'opacity-0 bg-transparent'}`}
       />
     </div>
   )

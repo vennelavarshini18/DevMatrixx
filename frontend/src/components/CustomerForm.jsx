@@ -128,8 +128,8 @@ export default function NexusStorefront({ onOrderPlaced }) {
       <div className="max-w-7xl mx-auto relative z-10">
         <header className="mb-16 mt-8 flex flex-col items-center border-b border-gray-800/50 pb-8">
           <div className="h-[1px] w-48 bg-gradient-to-r from-transparent via-cyan-500 to-transparent mb-6 opacity-30"></div>
-          <h1 className="text-4xl font-light tracking-[0.2em] text-gray-300 mb-2 uppercase underline decoration-wavy decoration-cyan-500/40 underline-offset-[12px]" style={{textShadow: "0 0 20px rgba(0, 255, 255, 0.2)"}}>
-            STORE <span className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-500">FRONT</span>
+          <h1 className="text-4xl font-light tracking-[0.2em] text-gray-300 mb-2 uppercase" style={{textShadow: "0 0 20px rgba(0, 255, 255, 0.2)"}}>
+            STORE <span className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-300 via-indigo-300 to-purple-300">FRONT</span>
           </h1>
           <p className="text-[#646464] uppercase tracking-[0.3em] text-[0.65rem] font-mono">
             Autonomous Fulfillment Routing
@@ -169,8 +169,8 @@ export default function NexusStorefront({ onOrderPlaced }) {
                     <div className="flex flex-col items-end">
                       {inStock ? (
                         <>
-                          <span className="text-[0.55rem] tracking-[0.2em] font-mono text-gray-500 uppercase">Reserves</span>
-                          <span className="text-sm font-light text-gray-300">{stock.toString().padStart(3, '0')}</span>
+                          <span className="text-[0.55rem] tracking-[0.2em] font-mono text-gray-300 uppercase opacity-90">Reserves</span>
+                          <span className="text-sm font-bold text-white">{stock.toString().padStart(3, '0')}</span>
                         </>
                       ) : (
                         <span className="text-[0.6rem] tracking-[0.15em] font-mono text-red-500/80 border border-red-500/30 px-2 py-0.5 rounded uppercase">

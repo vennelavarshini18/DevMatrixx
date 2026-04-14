@@ -32,15 +32,7 @@ class InferenceRunner:
         use_real_env: bool = True,
         step_delay: float = 0.05,
     ):
-        """
-        Args:
-            checkpoint_path: Path to the trained .zip model file
-            grid_size: Grid size for demo (100 for jaw-dropper, 5 for live)
-            max_steps: Max steps per episode
-            device: cpu for inference (fast enough)
-            use_real_env: True to use ML1's env, False for dummy
-            step_delay: Seconds between steps (for visual pacing in demo)
-        """
+        
         if not os.path.exists(checkpoint_path):
             raise FileNotFoundError(f"Checkpoint not found: {checkpoint_path}")
 
@@ -84,11 +76,7 @@ class InferenceRunner:
         return int(action)
 
     def run_episode_sync(self) -> list:
-        """
-        Run one full episode synchronously.
-        Returns list of get_state() dicts (one per step).
-        Good for testing.
-        """
+        
         obs, info = self.env.reset()
         states = []
 
@@ -111,13 +99,7 @@ class InferenceRunner:
         return states
 
     async def run_episode(self) -> AsyncGenerator[Dict[str, Any], None]:
-        """
-        Async generator that yields get_state() JSON for each step.
-        BE dev uses this in the WebSocket endpoint:
-
-            async for state in runner.run_episode():
-                await websocket.send_json(state)
-        """
+        
         obs, info = self.env.reset()
 
         # Yield initial state
@@ -140,7 +122,7 @@ class InferenceRunner:
                 await asyncio.sleep(self.step_delay)
 
     def get_model_info(self) -> Dict[str, Any]:
-        """Return model metadata for the UI."""
+        
         return {
             "grid_size": self.grid_size,
             "max_steps": self.max_steps,
@@ -185,11 +167,11 @@ def run_demo(checkpoint_path: str, grid_size: int, episodes: int, use_real_env: 
         status_icon = "✅" if success else "💥" if agent_status == "collided" else "⏰"
         print(f"  {status_icon} Episode {ep+1}/{episodes}: {agent_status} | Steps: {ep_steps} | Reward: {total_reward:.1f}")
 
-    print(f"\n📊 Results: {successes}/{episodes} successes ({successes/episodes:.0%})")
+    print(f"\n Results: {successes}/{episodes} successes ({successes/episodes:.0%})")
     print(f"   Avg steps: {total_steps / episodes:.0f}")
 
     # Print sample get_state() JSON for BE reference
-    print(f"\n📝 Sample get_state() JSON (for BE):")
+    print(f"\n Sample get_state() JSON (for BE):")
     sample = states[min(5, len(states)-1)]
     print(json.dumps(sample, indent=2))
 

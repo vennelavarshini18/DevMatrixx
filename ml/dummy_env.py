@@ -1,25 +1,4 @@
-"""
-ML2 — Dummy Warehouse Environment (Aligned with ML1's ACTUAL Code)
-===================================================================
-Mirrors ML1's WarehouseEnv channel order EXACTLY:
 
-  ⚠️  CRITICAL CHANNEL ORDER (from ML1's _build_observation):
-    Channel 0: OBSTACLES (255 where obstacles are)
-    Channel 1: AGENT     (255 where agent is)
-    Channel 2: GOAL      (255 where goal is)
-
-This is different from the original spec doc! The actual code is the truth.
-
-Other ML1 contracts matched:
-  - Observation: uint8, shape (3, N, N), values 0 or 255
-  - Action: Discrete(4) — 0=Up, 1=Down, 2=Left, 3=Right
-  - Collision terminates episode
-  - Wall hit: -1 penalty, agent stays
-  - get_state() for BE/WebSocket
-  - info dict with stage, success_rate, obstacles list
-
-Replace with ML1's real env: from ml1.env import WarehouseEnv
-"""
 
 import numpy as np
 import gymnasium as gym
@@ -29,14 +8,11 @@ import random
 
 
 class DummyWarehouseEnv(gym.Env):
-    """
-    Dummy warehouse env matching ML1's exact I/O contract.
-    Channel order: [obstacles, agent, goal] — matches ML1's code.
-    """
+    
 
     metadata = {"render_modes": ["human", "ansi"], "render_fps": 10}
 
-    # ── Reward Constants (match ML1 exactly) ──
+    
     REWARD_STEP_PENALTY = -0.01
     REWARD_CLOSER_SCALE = 0.1
     REWARD_WALL_HIT = -1.0
@@ -50,7 +26,7 @@ class DummyWarehouseEnv(gym.Env):
         self.max_steps = max_steps or self.MAX_STEPS_PER_EPISODE
         self.render_mode = render_mode
 
-        # ── Spaces (MUST match ML1) ──
+        
         self.action_space = spaces.Discrete(4)
         self.observation_space = spaces.Box(
             low=0, high=255,
@@ -58,15 +34,15 @@ class DummyWarehouseEnv(gym.Env):
             dtype=np.uint8,
         )
 
-        # Movement: 0=Up(y-1), 1=Down(y+1), 2=Left(x-1), 3=Right(x+1)
+        
         self._action_to_delta = {
-            0: (0, -1),   # Up
-            1: (0, 1),    # Down
-            2: (-1, 0),   # Left
-            3: (1, 0),    # Right
+            0: (0, -1),   
+            1: (0, 1),    
+            2: (-1, 0),   
+            3: (1, 0),    
         }
 
-        # State
+        
         self.agent_x = 0
         self.agent_y = 0
         self.agent_status = "moving"
@@ -78,7 +54,7 @@ class DummyWarehouseEnv(gym.Env):
         self.prev_distance = 0
         self.episode_count = 0
 
-        # Curriculum (simplified)
+        
         self.current_stage = 1
         self._success_history = deque(maxlen=100)
         self._total_episodes = 0
@@ -93,7 +69,7 @@ class DummyWarehouseEnv(gym.Env):
         return abs(self.agent_x - self.goal_x) + abs(self.agent_y - self.goal_y)
 
     def _spawn_obstacles(self):
-        """Spawn the static warehouse shelf layout (always active)."""
+        
         self.obstacles = []
 
         # Static Warehouse Environment layout
@@ -136,13 +112,7 @@ class DummyWarehouseEnv(gym.Env):
                 obs["y"] = max(0, min(self.grid_size - 1, obs["y"] + dy))
 
     def _build_observation(self) -> np.ndarray:
-        """
-        Build 3-channel uint8 observation grid.
-        ⚠️  CHANNEL ORDER MATCHES ML1's ACTUAL CODE:
-            Channel 0: OBSTACLES
-            Channel 1: AGENT
-            Channel 2: GOAL
-        """
+        
         obs = np.zeros((3, self.grid_size, self.grid_size), dtype=np.uint8)
 
         # Channel 0: OBSTACLES (255 where obstacles are)
@@ -160,7 +130,7 @@ class DummyWarehouseEnv(gym.Env):
         return obs
 
     def _check_collision(self, x: int, y: int) -> bool:
-        """Check if position collides with any obstacle."""
+        
         for o in self.obstacles:
             if o["x"] == x and o["y"] == y:
                 return True
@@ -173,7 +143,7 @@ class DummyWarehouseEnv(gym.Env):
 
         self._spawn_obstacles()
 
-        # Random agent and goal start in free spaces
+        
         occupied = {(obs["x"], obs["y"]) for obs in self.obstacles}
         agent_pos = self._sample_free_position(occupied)
         occupied.add(agent_pos)
@@ -334,7 +304,7 @@ if __name__ == "__main__":
     goal_channel = obs[2]   # Channel 2 should have goal
     assert agent_channel.sum() == 255, f"Channel 1 (agent) wrong: sum={agent_channel.sum()}"
     assert goal_channel.sum() == 255, f"Channel 2 (goal) wrong: sum={goal_channel.sum()}"
-    print(f"✅ Channel order verified: Ch0=obstacles, Ch1=agent, Ch2=goal")
+    print(f" Channel order verified: Ch0=obstacles, Ch1=agent, Ch2=goal")
 
     print(f"\nInfo dict keys: {list(info.keys())}")
     print(f"\nInitial grid:\n{env.render()}\n")
@@ -356,4 +326,4 @@ if __name__ == "__main__":
     assert obs.dtype == np.uint8
     assert obs.shape == (3, 15, 15)
     assert obs.max() <= 255
-    print("\n✅ Dummy env matches ML1's actual code I/O contract!")
+    print("\n Dummy env matches ML1's actual code I/O contract!")
