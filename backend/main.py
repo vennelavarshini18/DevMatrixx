@@ -25,12 +25,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Absolute path to the 37% Stage 2 fine-tuned model
 CHECKPOINT_PATH = os.path.abspath(
     os.path.join(
         os.path.dirname(__file__),
         "..",
-        "ml",
         "checkpoints",
         "final_model_37percent.zip"
     )

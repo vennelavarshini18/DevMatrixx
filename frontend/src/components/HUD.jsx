@@ -47,7 +47,7 @@ export default function HUD({ frameData, speedMultiplier, onSpeedChange, onBack 
 
       {/* ── MASSIVE DELIVERY SUCCESS TOAST ── */}
       {status === 'delivered' && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm z-[100] animate-in fade-in zoom-in duration-300">
+        <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm z-[100] animate-in fade-in zoom-in duration-700">
             <div className="bg-emerald-500 text-white px-12 py-8 rounded-[3rem] shadow-[0_0_100px_rgba(16,185,129,0.5)] border-4 border-emerald-400 transform transition-all flex flex-col items-center">
                 <span className="text-8xl mb-4">📦</span>
                 <h1 className="text-6xl font-extrabold tracking-tight mb-2 uppercase">Delivery Successful</h1>
