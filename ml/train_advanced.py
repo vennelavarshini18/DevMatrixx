@@ -57,8 +57,7 @@ def make_env(grid_size: int, max_steps: int):
 
 
 class GlobalCurriculumCallback(BaseCallback):
-    
-    def __init__(self, window_size=100, advance_threshold=0.90, verbose=1):
+    def __init__(self, window_size=100, advance_threshold=0.50, verbose=1):
         super().__init__(verbose)
         self.history = deque(maxlen=window_size)
         self.advance_threshold = advance_threshold
@@ -104,16 +103,6 @@ class GlobalCurriculumCallback(BaseCallback):
 
 
 def train_advanced(args):
-    print(f"""
-╔══════════════════════════════════════════════════════╗
-║     🔥 ADVANCED CURRICULUM RESUMPTION (Stage 2)    ║
-╠══════════════════════════════════════════════════════╣
-║  Timesteps:     {args.timesteps:<37,}║
-║  Learning Rate: {args.lr:<37}║
-║  N Envs:        {args.n_envs:<37}║
-║  Run Name:      {args.run_name:<37}║
-╚══════════════════════════════════════════════════════╝
-    """)
 
     # 1. Spin up the advanced environments
     env_fns = [make_env(args.grid_size, args.max_steps) for _ in range(args.n_envs)]

@@ -1,1 +1,6 @@
-__pycache__
+__pycache__/
+*.pyc
+tb_logs/
+checkpoints/
+!checkpoints/final_model_37percent.zip
+ml/advanced_bake.log

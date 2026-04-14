@@ -1,19 +1,3 @@
-"""
-ML2 — Inference Module for FastAPI Integration
-================================================
-Loads a trained checkpoint and runs the agent step-by-step.
-Uses ML1's env.get_state() for WebSocket JSON output.
-
-Usage:
-  # Standalone test (uses dummy env)
-  python inference.py --checkpoint checkpoints/<run>/best_model.zip --grid_size 15 --episodes 5
-
-  # Import into FastAPI (BE dev does this)
-  from inference import InferenceRunner
-  runner = InferenceRunner("checkpoints/best_model.zip", grid_size=100)
-  async for state_json in runner.run_episode():
-      await websocket.send_json(state_json)
-"""
 
 import os
 import sys
@@ -69,7 +53,11 @@ class InferenceRunner:
         # Create environment
         if use_real_env:
             try:
-                from ml1.env import WarehouseEnv
+                import sys
+                project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+                if project_root not in sys.path:
+                    sys.path.insert(0, project_root)
+                from ml1.env.warehouse_env import WarehouseEnv
                 self.env = WarehouseEnv(grid_size=grid_size)
                 print(f"Inference env: ML1's WarehouseEnv ({grid_size}x{grid_size})")
             except ImportError as e:
@@ -82,8 +70,10 @@ class InferenceRunner:
             self.env = DummyWarehouseEnv(grid_size=grid_size, max_steps=max_steps)
             print(f"Inference env: DummyWarehouseEnv ({grid_size}x{grid_size})")
 
-        # Force Stage 2: static warehouse shelves with collision penalties
-        self.env.curriculum.current_stage = 2
+        # Phase 2 model with Stage 3 (competing robots) unlocked for demo!
+        # The Phase 2 model learned Stage 2 obstacles. Stage 3 adds competing robots.
+        if hasattr(self.env, "curriculum"):
+            self.env.curriculum.current_stage = 3
 
         print(f"Agent loaded from {checkpoint_path}")
         print(f"   Grid: {grid_size}×{grid_size} | Device: {device} | Delay: {step_delay}s")
