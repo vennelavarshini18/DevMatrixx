@@ -22,10 +22,18 @@ export default function CustomerForm({ onOrderPlaced }) {
         body: JSON.stringify({ item })
       });
       if (res.ok) {
-        onOrderPlaced(); // Navigate to the warehouse view
+        const data = await res.json();
+        if (data.error) {
+          alert(data.error);
+        } else {
+          onOrderPlaced(); // Navigate to the warehouse view
+        }
+      } else {
+        alert("Server error occurred");
       }
     } catch(err) {
       console.error(err);
+      alert("Network error occurred");
     }
   };
 

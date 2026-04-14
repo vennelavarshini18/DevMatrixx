@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function HUD({ frameData, speedMultiplier, onSpeedChange }) {
+export default function HUD({ frameData, speedMultiplier, onSpeedChange, onBack }) {
   if (!frameData) return null;
 
   const { stage, step, episode, metrics, agent, goal, robot_state } = frameData;
@@ -24,6 +24,11 @@ export default function HUD({ frameData, speedMultiplier, onSpeedChange }) {
       
       {/* ── TOP SECTION INVENTORY TRACKER ── */}
       <div className="absolute top-0 left-0 right-0 bg-gray-900/90 backdrop-blur-md border-b border-white/10 flex justify-center items-center py-3 px-6 shadow-2xl pointer-events-auto">
+        {onBack && (
+            <button onClick={onBack} className="absolute left-6 px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg text-white font-bold transition-colors shadow-lg z-[110]">
+               &larr; Back to Store
+            </button>
+        )}
         <div className="flex gap-6 max-w-7xl overflow-x-auto w-full justify-center">
             {frameData.inventory && Object.entries(frameData.inventory).map(([key, count]) => {
                 const labelMap = {face_cream: 'Skincare', coffee: 'Grocery', sneakers: 'Footwear', tshirt: 'Clothes', vitamins: 'Pharmacy', laptop: 'Electronics', notebook: 'Stationery', smartwatch: 'Accessories'};

@@ -85,7 +85,7 @@ async def startup_event():
         use_real_env=True,
         step_delay=0.1
     )
-    runner.env.curriculum.current_stage = 3
+    runner.env.curriculum.current_stage = 2
     print("InferenceRunner initialized!")
     
     # Start the continuous orchestrator task
@@ -126,6 +126,10 @@ async def orchestrator_loop():
                 continue
                 
             # 1. FETCHING STAGE
+            # Reset environment step and reward counters for the new continuous segment
+            runner.env.current_step = 0
+            runner.env.episode_reward = 0
+
             # Aim for the aisle exactly in front of the shelf so the robot doesn't crash into the shelf
             pickup_x = target["x"]
             pickup_y = target["y"] + 1
@@ -161,6 +165,12 @@ async def orchestrator_loop():
                 await asyncio.sleep(runner.step_delay)
                 step_count += 1
                 
+            if not done:
+                # Failed to fetch (timed out)
+                robot_state["status"] = "idle"
+                await send_broadcast()
+                continue
+
             # Simulate picking up
             robot_state["carrying"] = item
             await send_broadcast()
@@ -194,15 +204,19 @@ async def orchestrator_loop():
                 await asyncio.sleep(runner.step_delay)
                 step_count += 1
                 
-            # 3. DELIVERED
-            # Update single source of truth
-            if inventory[item] > 0:
-                inventory[item] -= 1
-            robot_state["carrying"] = None
-            robot_state["status"] = "delivered"
-            await send_broadcast()
-            await asyncio.sleep(3.0) # Pause so UI can show the success toast
-            
+            if done:
+                # 3. DELIVERED
+                # Update single source of truth
+                if inventory[item] > 0:
+                    inventory[item] -= 1
+                robot_state["carrying"] = None
+                robot_state["status"] = "delivered"
+                await send_broadcast()
+                await asyncio.sleep(3.0) # Pause so UI can show the success toast
+            else:
+                # Failed to return (timed out)
+                robot_state["carrying"] = None
+                
             robot_state["status"] = "idle"
             await send_broadcast() 
         else:
@@ -221,6 +235,8 @@ async def get_inventory():
 async def place_order(order: OrderRequest):
     if order.item not in inventory:
         return {"error": "Item not found"}
+    if inventory[order.item] <= 0:
+        return {"error": "Item out of stock"}
         
     order_queue.append(order.item)
     return {"status": "success", "queue_position": len(order_queue)}

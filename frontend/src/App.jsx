@@ -31,7 +31,7 @@ export default function App() {
   return (
     <div className="w-screen h-screen bg-black relative overflow-hidden">
       <WarehouseScene frameData={frameData} connectionStatus={connectionStatus} />
-      <HUD frameData={frameData} speedMultiplier={speedMultiplier} onSpeedChange={setSpeedMultiplier} />
+      <HUD frameData={frameData} speedMultiplier={speedMultiplier} onSpeedChange={setSpeedMultiplier} onBack={() => setCurrentView('store')} />
       
       {/* Flash Overlay */}
       <div 
