@@ -1,3 +1,9 @@
 fastapi
 uvicorn[standard]
 websockets
+stable-baselines3
+torch
+gymnasium
+shimmy
+numpy
+pydantic

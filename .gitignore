@@ -4,3 +4,11 @@ tb_logs/
 checkpoints/
 !checkpoints/final_model_37percent.zip
 ml/advanced_bake.log
+backend/venv/
+node_modules/
+dist/
+.DS_Store
+*.pyd
+*.pyo
+*.swp
+*.bak
