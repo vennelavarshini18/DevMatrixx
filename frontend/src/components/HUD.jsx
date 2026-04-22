@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function HUD({ frameData, speedMultiplier, onSpeedChange, onBack }) {
+export default function HUD({ frameData, speedMultiplier, onSpeedChange, onBack, onSupplyChain }) {
   if (!frameData) return null;
 
   const { stage, step, episode, metrics, agent, goal, robot_state } = frameData;
@@ -27,6 +27,11 @@ export default function HUD({ frameData, speedMultiplier, onSpeedChange, onBack 
         {onBack && (
             <button onClick={onBack} className="absolute left-6 px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg text-white font-bold transition-colors shadow-lg z-[110]">
                &larr; Back to Store
+            </button>
+        )}
+        {onSupplyChain && (
+            <button onClick={onSupplyChain} className="absolute right-6 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-lg text-white font-bold transition-colors shadow-lg z-[110] flex items-center gap-2">
+               🗺️ Supply Chain &rarr;
             </button>
         )}
         <div className="flex gap-6 max-w-7xl overflow-x-auto w-full justify-center">

@@ -4,10 +4,11 @@ import WarehouseScene from './components/WarehouseScene'
 import HUD from './components/HUD'
 import CustomerForm from './components/CustomerForm'
 import SupplyChainPage from './components/SupplyChainPage'
+import SupplyChainDashboard from './components/supply/SupplyChainDashboard'
 import useWarehouseSocket from './hooks/useWarehouseSocket'
 
 export default function App() {
-  const [currentView, setCurrentView] = useState('landing') // 'landing', 'store', 'supply', or 'warehouse'
+  const [currentView, setCurrentView] = useState('landing')
   const [speedMultiplier, setSpeedMultiplier] = useState(1)
   const { frameData, connectionStatus } = useWarehouseSocket('ws://localhost:8000/ws', speedMultiplier)
 
@@ -27,13 +28,14 @@ export default function App() {
   }, [frameData?.agent?.status])
 
   if (currentView === 'landing') {
-    return <LandingPage onGetStarted={() => setCurrentView('store')} />
+    return <LandingPage onGetStarted={() => setCurrentView('store')} onSupplyChain={() => setCurrentView('supplyDashboard')} />
   }
 
   if (currentView === 'store') {
     return <CustomerForm onOrderPlaced={() => setCurrentView('supply')} />
   }
 
+  // Person 4's Supply Chain Order Page (order flow → warehouse)
   if (currentView === 'supply') {
     return (
       <SupplyChainPage
@@ -43,10 +45,21 @@ export default function App() {
     )
   }
 
+  // Person 3's Route Optimizer Dashboard (map, simulation, storm demo)
+  if (currentView === 'supplyDashboard') {
+    return <SupplyChainDashboard onBack={() => setCurrentView('landing')} />
+  }
+
   return (
     <div className="w-screen h-screen bg-black relative overflow-hidden">
       <WarehouseScene frameData={frameData} connectionStatus={connectionStatus} />
-      <HUD frameData={frameData} speedMultiplier={speedMultiplier} onSpeedChange={setSpeedMultiplier} onBack={() => setCurrentView('supply')} />
+      <HUD
+        frameData={frameData}
+        speedMultiplier={speedMultiplier}
+        onSpeedChange={setSpeedMultiplier}
+        onBack={() => setCurrentView('supply')}
+        onSupplyChain={() => setCurrentView('supplyDashboard')}
+      />
 
       {/* Flash Overlay */}
       <div
@@ -55,4 +68,3 @@ export default function App() {
     </div>
   )
 }
-

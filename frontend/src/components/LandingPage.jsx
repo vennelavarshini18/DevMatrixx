@@ -1,7 +1,7 @@
 import React from 'react';
 import MiniCityScene from './MiniCityScene';
 
-const LandingPage = ({ onGetStarted }) => {
+const LandingPage = ({ onGetStarted, onSupplyChain }) => {
   return (
     <div className="min-h-screen w-full bg-[#050505] flex flex-col font-sans text-gray-100 overflow-hidden relative">
       
@@ -17,10 +17,10 @@ const LandingPage = ({ onGetStarted }) => {
         </div>
         
         <div className="hidden md:flex gap-10 font-bold text-sm tracking-wide text-gray-400">
+          {onSupplyChain && <button onClick={onSupplyChain} className="hover:text-blue-300 transition-colors">SUPPLY CHAIN</button>}
           <button className="hover:text-blue-300 transition-colors">DASHBOARD</button>
           <button className="hover:text-blue-300 transition-colors">FLEET</button>
           <button className="hover:text-blue-300 transition-colors">ANALYTICS</button>
-          <button className="hover:text-blue-300 transition-colors">SUPPORT</button>
         </div>
       </nav>
 

@@ -20,6 +20,8 @@ wareflow_p1/warehouse_selector.pkl
 .env
 .env.local
 serviceAccountKey.json
+firebase-service-account.json
+backend/supply_chain/firebase-service-account.json
 *.pem
 *.key
 
