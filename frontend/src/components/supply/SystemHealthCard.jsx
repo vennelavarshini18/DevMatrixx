@@ -8,7 +8,7 @@ export default function SystemHealthCard() {
 
   const pollHealth = useCallback(async () => {
     try {
-      const res = await fetch('http://localhost:8001/health');
+      const res = await fetch('http://localhost:8002/health');
       if (!res.ok) throw new Error('unhealthy');
       const data = await res.json();
       setHealth(data);
@@ -92,7 +92,7 @@ export default function SystemHealthCard() {
         <div className="flex items-center gap-2">
           <Server className="w-3 h-3 text-gray-600" />
           <span className="text-[0.6rem] text-gray-600 font-mono">
-            API: http://localhost:8001
+            API: http://localhost:8002
           </span>
         </div>
       </div>

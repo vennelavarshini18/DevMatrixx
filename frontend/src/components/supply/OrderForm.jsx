@@ -34,7 +34,7 @@ export default function OrderForm({ onOrderPlaced, setError }) {
     const startTime = performance.now();
 
     try {
-      const res = await fetch('http://localhost:8001/order/place', {
+      const res = await fetch('http://localhost:8002/order/place', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
