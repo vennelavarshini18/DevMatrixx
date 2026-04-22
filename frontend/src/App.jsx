@@ -3,10 +3,11 @@ import LandingPage from './components/LandingPage'
 import WarehouseScene from './components/WarehouseScene'
 import HUD from './components/HUD'
 import CustomerForm from './components/CustomerForm'
+import SupplyChainPage from './components/SupplyChainPage'
 import useWarehouseSocket from './hooks/useWarehouseSocket'
 
 export default function App() {
-  const [currentView, setCurrentView] = useState('landing') // 'landing', 'store' or 'warehouse'
+  const [currentView, setCurrentView] = useState('landing') // 'landing', 'store', 'supply', or 'warehouse'
   const [speedMultiplier, setSpeedMultiplier] = useState(1)
   const { frameData, connectionStatus } = useWarehouseSocket('ws://localhost:8000/ws', speedMultiplier)
 
@@ -30,13 +31,22 @@ export default function App() {
   }
 
   if (currentView === 'store') {
-    return <CustomerForm onOrderPlaced={() => setCurrentView('warehouse')} />
+    return <CustomerForm onOrderPlaced={() => setCurrentView('supply')} />
+  }
+
+  if (currentView === 'supply') {
+    return (
+      <SupplyChainPage
+        onBack={() => setCurrentView('store')}
+        onContinue={() => setCurrentView('warehouse')}
+      />
+    )
   }
 
   return (
     <div className="w-screen h-screen bg-black relative overflow-hidden">
       <WarehouseScene frameData={frameData} connectionStatus={connectionStatus} />
-      <HUD frameData={frameData} speedMultiplier={speedMultiplier} onSpeedChange={setSpeedMultiplier} onBack={() => setCurrentView('store')} />
+      <HUD frameData={frameData} speedMultiplier={speedMultiplier} onSpeedChange={setSpeedMultiplier} onBack={() => setCurrentView('supply')} />
 
       {/* Flash Overlay */}
       <div
@@ -45,3 +55,4 @@ export default function App() {
     </div>
   )
 }
+

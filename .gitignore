@@ -1,14 +1,37 @@
+# Python
 __pycache__/
 *.pyc
+*.pyd
+*.pyo
+*.egg-info/
+venv/
+backend/venv/
+
+# ML artifacts & logs
 tb_logs/
 checkpoints/
 !checkpoints/final_model_37percent.zip
 ml/advanced_bake.log
-backend/venv/
+ml/bake.log
+wareflow_p1/warehouse_training_data.csv
+wareflow_p1/warehouse_selector.pkl
+
+# Secrets & credentials (NEVER push these)
+.env
+.env.local
+serviceAccountKey.json
+*.pem
+*.key
+
+# Node
 node_modules/
 dist/
+
+# OS / Editor
 .DS_Store
-*.pyd
-*.pyo
 *.swp
 *.bak
+Thumbs.db
+
+# Large log file
+git_log_all.txt

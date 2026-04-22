@@ -12,10 +12,36 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 ml_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "ml"))
 if ml_dir not in sys.path:
     sys.path.insert(0, ml_dir)
-
 from ml.inference import InferenceRunner
+from contextlib import asynccontextmanager
 
-app = FastAPI()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    global runner
+    print("Initializing InferenceRunner...")
+    runner = InferenceRunner(
+        checkpoint_path=CHECKPOINT_PATH,
+        grid_size=15,
+        max_steps=200,
+        use_real_env=True,
+        step_delay=0.1
+    )
+    runner.env.curriculum.current_stage = 2
+    print("InferenceRunner initialized!")
+    
+    # Start the continuous orchestrator task
+    orchestrator_task = asyncio.create_task(orchestrator_loop())
+    
+    yield
+    
+    # Cleanup (optional but good practice)
+    orchestrator_task.cancel()
+    try:
+        await orchestrator_task
+    except asyncio.CancelledError:
+        pass
+
+app = FastAPI(lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -72,23 +98,6 @@ class OrderRequest(BaseModel):
 
 active_connections: List[WebSocket] = []
 runner = None
-
-@app.on_event("startup")
-async def startup_event():
-    global runner
-    print("Initializing InferenceRunner...")
-    runner = InferenceRunner(
-        checkpoint_path=CHECKPOINT_PATH,
-        grid_size=15,
-        max_steps=200,
-        use_real_env=True,
-        step_delay=0.1
-    )
-    runner.env.curriculum.current_stage = 2
-    print("InferenceRunner initialized!")
-    
-    # Start the continuous orchestrator task
-    asyncio.create_task(orchestrator_loop())
 
 async def send_broadcast():
     if not active_connections or not runner:
