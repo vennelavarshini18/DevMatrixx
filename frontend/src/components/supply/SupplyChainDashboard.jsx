@@ -2,12 +2,14 @@ import React, { useState, useCallback } from 'react';
 import useSupplyChainData from '../../hooks/useSupplyChainData';
 import SupplyMap from './SupplyMap';
 
+const P2_API = 'http://localhost:8000';
+
 /**
  * WareFlow Supply Chain Dashboard
  * 
  * Full-screen dark dashboard with:
  * - Left: Custom SVG network map (8 cities, animated route, truck position)
- * - Right: Shipment status, route info, warehouse queues, demo controls
+ * - Right: Shipment status, P2 disruption intel, route info, warehouse queues, demo controls
  * - Bottom overlay: Gemini alert card (slides in when risk > 0.7)
  */
 export default function SupplyChainDashboard({ onBack }) {
@@ -16,7 +18,27 @@ export default function SupplyChainDashboard({ onBack }) {
     triggerWeatherEvent, startSimulation, stopSimulation, resetShipment,
   } = useSupplyChainData();
 
-  const [demoLoading, setDemoLoading] = useState(null); // tracks which button is loading
+  const [demoLoading, setDemoLoading] = useState(null);
+  const [p2Data, setP2Data] = useState(null);
+  const [p2Loading, setP2Loading] = useState(false);
+
+  // Fetch live disruption data from P2's endpoint
+  const scanCity = useCallback(async (city, lat, lng) => {
+    setP2Loading(true);
+    try {
+      const res = await fetch(`${P2_API}/api/supply/trigger-weather-event`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lat, lng, city, base_travel_time: 4.0, source: 'Lucknow', destination: 'Delhi' }),
+      });
+      const data = await res.json();
+      setP2Data(data);
+    } catch (err) {
+      console.error('[P2 Scan] Failed:', err);
+    } finally {
+      setP2Loading(false);
+    }
+  }, []);
 
   // --- Risk score color logic ---
   const riskScore = shipment?.risk_score || 0;
@@ -118,6 +140,89 @@ export default function SupplyChainDashboard({ onBack }) {
                 {(riskScore * 100).toFixed(0)}% — {riskLabel}
               </span>
             </Row>
+          </Panel>
+
+          {/* ── P2: DISRUPTION INTELLIGENCE ── */}
+          <Panel title="DISRUPTION INTELLIGENCE">
+            {/* Risk Score with animated bar */}
+            <div className="space-y-1.5">
+              <div className="flex justify-between items-end">
+                <span className="text-[0.55rem] font-mono tracking-[0.12em] uppercase text-gray-500">Risk Score</span>
+                <span className={`text-lg font-bold font-mono tabular-nums ${
+                  (p2Data?.risk_score ?? riskScore) > 0.7 ? 'text-red-400' :
+                  (p2Data?.risk_score ?? riskScore) > 0.4 ? 'text-amber-400' : 'text-emerald-400'
+                }`}>
+                  {((p2Data?.risk_score ?? riskScore) * 100).toFixed(0)}%
+                </span>
+              </div>
+              <div className="h-1.5 bg-[#1a1b2e] rounded-full overflow-hidden">
+                <div
+                  className={`h-full rounded-full transition-all duration-700 ease-out ${
+                    (p2Data?.risk_score ?? riskScore) > 0.7 ? 'bg-gradient-to-r from-red-600 to-red-400' :
+                    (p2Data?.risk_score ?? riskScore) > 0.4 ? 'bg-gradient-to-r from-amber-600 to-amber-400' :
+                    'bg-gradient-to-r from-emerald-600 to-emerald-400'
+                  }`}
+                  style={{ width: `${(p2Data?.risk_score ?? riskScore) * 100}%` }}
+                />
+              </div>
+            </div>
+
+            {/* Weather Stats */}
+            <div className="grid grid-cols-2 gap-1.5 mt-1">
+              <div className="bg-[#0f1020] border border-white/5 rounded-lg p-2 text-center">
+                <div className="text-[0.5rem] font-mono tracking-[0.12em] uppercase text-gray-600 mb-0.5">Precip</div>
+                <div className="text-sm font-bold font-mono text-cyan-400">
+                  {p2Data?.weather?.precipitation_mm !== undefined
+                    ? `${p2Data.weather.precipitation_mm.toFixed(1)} mm`
+                    : '—'}
+                </div>
+              </div>
+              <div className="bg-[#0f1020] border border-white/5 rounded-lg p-2 text-center">
+                <div className="text-[0.5rem] font-mono tracking-[0.12em] uppercase text-gray-600 mb-0.5">Wind</div>
+                <div className="text-sm font-bold font-mono text-cyan-400">
+                  {p2Data?.weather?.wind_speed_kmh !== undefined
+                    ? `${p2Data.weather.wind_speed_kmh.toFixed(1)} km/h`
+                    : '—'}
+                </div>
+              </div>
+            </div>
+
+            {/* Gemini Alert Terminal */}
+            {(p2Data?.gemini_alert || shipment?.gemini_alert) && (
+              <div className="bg-black/50 border border-white/5 rounded-lg p-2.5 relative overflow-hidden mt-1">
+                <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-blue-500/40 to-transparent" />
+                <p className="text-[0.65rem] leading-relaxed text-gray-300 font-mono">
+                  <span className="text-blue-400 font-bold mr-1">{'>'}</span>
+                  {p2Data?.gemini_alert || shipment?.gemini_alert}
+                </p>
+              </div>
+            )}
+
+            {/* City Scan Buttons */}
+            <div className="flex gap-1 mt-1">
+              {[
+                { city: 'Lucknow', lat: 26.8467, lng: 80.9462 },
+                { city: 'Agra',    lat: 27.1767, lng: 78.0081 },
+                { city: 'Delhi',   lat: 28.6139, lng: 77.2090 },
+              ].map((s) => (
+                <button
+                  key={s.city}
+                  onClick={() => scanCity(s.city, s.lat, s.lng)}
+                  disabled={p2Loading}
+                  className={`flex-1 py-1.5 text-[0.5rem] font-bold tracking-wider uppercase rounded-md border transition-all ${
+                    p2Data?.city === s.city
+                      ? 'bg-blue-500/15 border-blue-500/40 text-blue-400'
+                      : 'bg-transparent border-white/5 text-gray-600 hover:text-gray-300 hover:border-white/15'
+                  } ${p2Loading ? 'opacity-50 cursor-wait' : 'cursor-pointer active:scale-95'}`}
+                >
+                  {p2Loading && p2Data?.city === s.city ? '...' : s.city}
+                </button>
+              ))}
+            </div>
+
+            <div className="text-[0.45rem] font-mono text-gray-700 text-center tracking-widest mt-0.5">
+              LightGBM + Open-Meteo + Gemini Flash
+            </div>
           </Panel>
 
           {/* ── ROUTE ────────────────── */}

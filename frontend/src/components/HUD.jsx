@@ -102,6 +102,7 @@ export default function HUD({ frameData, speedMultiplier, onSpeedChange, onBack,
         />
         <span className="font-mono text-sm w-8 text-right">{speedMultiplier}x</span>
       </div>
+
     </div>
   );
 }

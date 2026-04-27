@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import DisruptionCard from '../DisruptionCard';
 
 /**
  * Custom SVG-based network map of the Indian highway system.
@@ -262,6 +263,9 @@ export default function SupplyMap({ shipment }) {
           <text x="165" y="9" fill="#64748b" fontSize="8" fontFamily="monospace"></text>
         </g>
       </svg>
+      
+      {/* ── DISRUPTION HUD ─────────────────────────────────────── */}
+      <DisruptionCard />
     </div>
   );
 }

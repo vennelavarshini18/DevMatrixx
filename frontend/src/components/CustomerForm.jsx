@@ -94,7 +94,10 @@ export default function NexusStorefront({ onOrderPlaced }) {
         setInventory(data.inventory);
         setLoading(false);
       })
-      .catch(err => console.error("Backend offline?"));
+      .catch(err => {
+        console.error("Backend offline?");
+        setLoading(false);
+      });
   }, []);
 
   const placeOrder = async (categoryId, itemName) => {

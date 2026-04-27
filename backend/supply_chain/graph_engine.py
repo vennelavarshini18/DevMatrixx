@@ -70,39 +70,50 @@ def calculate_optimal_route(
     source: str,
     destination: str,
     risk_score: float = 0.0,
-    affected_edge: Optional[Tuple[str, str]] = None
+    affected_edge: Optional[Tuple[str, str]] = None,
+    affected_city: Optional[str] = None
 ) -> Tuple[List[str], float]:
     """
     Calculates the shortest path using Dijkstra's algorithm.
     
     If P2's disruption predictor reports a high risk_score (> 0.7),
-    the affected highway edge gets penalized — its travel time is
-    multiplied by (1 + risk_score). This forces Dijkstra to find
-    an alternative route that avoids the dangerous segment.
+    we penalize highway edges to force Dijkstra to find an alternative.
+    We can penalize either a specific edge or all edges touching a city.
     
     Args:
         source: Starting city name (e.g., "Lucknow")
         destination: Ending city name (e.g., "Delhi")
         risk_score: P2's disruption risk score (0.0 - 1.0)
-        affected_edge: Tuple of (city_a, city_b) for the disrupted highway
+        affected_edge: Tuple of (city_a, city_b) for a specific disrupted highway
+        affected_city: Name of a city where ALL incident highways are disrupted
         
     Returns:
         Tuple of (route_list, eta_hours)
-        route_list: Ordered list of city names from source to destination
-        eta_hours: Estimated travel time in hours
     """
     # Create a working copy — never mutate the base graph
     H = G.copy()
 
-    # Apply risk penalty to the affected edge
-    if risk_score > 0.7 and affected_edge:
+    # Apply risk penalty to the affected city (dramatic reroute)
+    if risk_score > 0.7 and affected_city:
+        if H.has_node(affected_city):
+            # Penalize all edges connected to this city
+            for u, v in H.edges(affected_city):
+                original_weight = H[u][v]["weight"]
+                penalty_multiplier = 1 + (3 * risk_score)  # Extra aggressive for city-wide storm
+                H[u][v]["weight"] = original_weight * penalty_multiplier
+                print(f"[GRAPH] Penalizing city edge {u}<->{v}: "
+                      f"{original_weight:.1f}h -> {H[u][v]['weight']:.1f}h "
+                      f"(risk={risk_score:.2f})")
+
+    # Apply risk penalty to a specific affected edge (legacy/granular)
+    elif risk_score > 0.7 and affected_edge:
         node_a, node_b = affected_edge
         if H.has_edge(node_a, node_b):
             original_weight = H[node_a][node_b]["weight"]
-            penalty_multiplier = 1 + (2 * risk_score)  # Aggressive penalty for dramatic reroute
+            penalty_multiplier = 1 + (2 * risk_score)
             H[node_a][node_b]["weight"] = original_weight * penalty_multiplier
-            print(f"[GRAPH] Penalizing {node_a}↔{node_b}: "
-                  f"{original_weight:.1f}h → {original_weight * penalty_multiplier:.1f}h "
+            print(f"[GRAPH] Penalizing specific edge {node_a}<->{node_b}: "
+                  f"{original_weight:.1f}h -> {H[node_a][node_b]['weight']:.1f}h "
                   f"(risk={risk_score:.2f})")
 
     try:
@@ -157,23 +168,23 @@ if __name__ == "__main__":
 
     # Test 1: Normal route
     route, eta = calculate_optimal_route("Lucknow", "Delhi")
-    print(f"\n✅ Normal route: {' → '.join(route)}")
+    print(f"\n[OK] Normal route: {' -> '.join(route)}")
     print(f"   ETA: {eta} hours")
 
-    # Test 2: Disrupted route (Agra→Delhi storm)
+    # Test 2: Disrupted route (Agra->Delhi storm)
     route2, eta2 = calculate_optimal_route(
         "Lucknow", "Delhi",
         risk_score=0.85,
         affected_edge=("Agra", "Delhi")
     )
-    print(f"\n⚠️  Rerouted (storm on Agra→Delhi): {' → '.join(route2)}")
+    print(f"\n[WARNING] Rerouted (storm on Agra->Delhi): {' -> '.join(route2)}")
     print(f"   ETA: {eta2} hours")
 
     # Test 3: Varanasi to Jaipur (long cross-country)
     route3, eta3 = calculate_optimal_route("Varanasi", "Jaipur")
-    print(f"\n🗺️  Cross-country: {' → '.join(route3)}")
+    print(f"\n[MAP] Cross-country: {' -> '.join(route3)}")
     print(f"   ETA: {eta3} hours")
 
     # Graph info
     info = get_graph_info()
-    print(f"\n📊 Graph: {info['total_cities']} cities, {info['total_highways']} highways")
+    print(f"\n[GRAPH] Graph: {info['total_cities']} cities, {info['total_highways']} highways")

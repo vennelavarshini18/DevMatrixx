@@ -63,21 +63,21 @@ def initialize_firebase() -> bool:
     global _using_mock, _firebase_db
 
     if not _FIREBASE_AVAILABLE:
-        print("[FIREBASE] ⚠️  Running in MOCK mode (firebase-admin not installed)")
+        print("[FIREBASE] --- Running in MOCK mode (firebase-admin not installed)")
         _using_mock = True
         return False
 
     from supply_chain.firebase_config import SERVICE_ACCOUNT_PATH, DATABASE_URL
 
     if not os.path.exists(SERVICE_ACCOUNT_PATH):
-        print(f"[FIREBASE] ⚠️  Service account not found at: {SERVICE_ACCOUNT_PATH}")
-        print("[FIREBASE] ⚠️  Running in MOCK mode. Place your firebase-service-account.json there.")
+        print(f"[FIREBASE] --- Service account not found at: {SERVICE_ACCOUNT_PATH}")
+        print("[FIREBASE] --- Running in MOCK mode. Place your firebase-service-account.json there.")
         _using_mock = True
         return False
 
     if DATABASE_URL == "https://your-project-id-default-rtdb.firebaseio.com/":
-        print("[FIREBASE] ⚠️  DATABASE_URL not configured in firebase_config.py")
-        print("[FIREBASE] ⚠️  Running in MOCK mode.")
+        print("[FIREBASE] --- DATABASE_URL not configured in firebase_config.py")
+        print("[FIREBASE] --- Running in MOCK mode.")
         _using_mock = True
         return False
 
@@ -89,12 +89,12 @@ def initialize_firebase() -> bool:
 
         _firebase_db = firebase_db_module
         _using_mock = False
-        print("[FIREBASE] ✅ Connected to live Firebase Realtime Database")
+        print("[FIREBASE] [OK] Connected to live Firebase Realtime Database")
         return True
 
     except Exception as e:
-        print(f"[FIREBASE] ❌ Failed to initialize: {e}")
-        print("[FIREBASE] ⚠️  Falling back to MOCK mode")
+        print(f"[FIREBASE] [FAIL] Failed to initialize: {e}")
+        print("[FIREBASE] [WARN] Falling back to MOCK mode")
         _using_mock = True
         return False
 
@@ -250,13 +250,13 @@ def seed_initial_data() -> None:
 
     if _using_mock:
         _mock_db.update(schema)
-        print("[MOCK-DB] ✅ Database seeded with initial schema")
+        print("[MOCK-DB] [OK] Database seeded with initial schema")
         return
 
     # Atomically set the entire root to the clean schema
     ref = _firebase_db.reference("/")
     ref.set(schema)
-    print("[FIREBASE] ✅ Database fully reset with initial schema")
+    print("[FIREBASE] [OK] Database fully reset with initial schema")
 
 
 def get_full_database() -> Dict[str, Any]:

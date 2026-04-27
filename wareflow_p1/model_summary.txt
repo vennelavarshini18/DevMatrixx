@@ -5,7 +5,7 @@
 Model Type:      XGBClassifier
 Estimators:      100
 Test Accuracy:   0.9805 (98.0%)
-Training Time:   1.61s
+Training Time:   0.36s
 Training Rows:   10,000
 Features:        4
 

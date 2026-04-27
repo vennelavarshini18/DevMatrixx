@@ -47,6 +47,11 @@ from supply_chain.firebase_client import (
     get_full_database,
     is_mock_mode,
 )
+from supply_chain.risk_listener import (
+    risk_score_listener_loop,
+    stop_listener,
+    reset_listener_state,
+)
 
 
 # ─── REQUEST MODELS ─────────────────────────────────────────────────────────
@@ -56,8 +61,9 @@ class RerouteRequest(BaseModel):
     source: str = "Lucknow"
     destination: str = "Delhi"
     risk_score: float
-    edge_a: str    # e.g., "Agra"
-    edge_b: str    # e.g., "Delhi"
+    edge_a: Optional[str] = None
+    edge_b: Optional[str] = None
+    affected_city: Optional[str] = None
 
 class WeatherEventRequest(BaseModel):
     """Demo endpoint payload to simulate a storm on a specific highway."""
@@ -73,12 +79,18 @@ class ResetRequest(BaseModel):
     source: str = "Lucknow"
     destination: str = "Delhi"
 
+class OrderPlaceRequest(BaseModel):
+    """P4's incoming order payload from the storefront UI."""
+    order_id: str
+    customer_coords: list[float]
+    items: list[str] = []
+
 
 # ─── APP LIFESPAN ───────────────────────────────────────────────────────────
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Initialize Firebase on startup, clean up on shutdown."""
+    """Initialize Firebase on startup, start risk listener, clean up on shutdown."""
     is_live = initialize_firebase()
     mode = "LIVE Firebase" if is_live else "MOCK in-memory"
     print(f"\n{'='*60}")
@@ -86,8 +98,19 @@ async def lifespan(app: FastAPI):
     print(f"  Mode: {mode}")
     print(f"  Port: 8001")
     print(f"{'='*60}\n")
+
+    # Start the Firebase risk_score listener (Person 2 → Person 3 safety net)
+    risk_listener_task = asyncio.create_task(risk_score_listener_loop())
+
     yield
-    # Shutdown: stop simulation if running
+
+    # Shutdown: stop risk listener and simulation
+    stop_listener()
+    risk_listener_task.cancel()
+    try:
+        await risk_listener_task
+    except asyncio.CancelledError:
+        pass
     global _simulation_running
     _simulation_running = False
     print("\n[SERVER] Supply chain server shutting down.")
@@ -181,11 +204,12 @@ async def trigger_reroute(req: RerouteRequest):
     old_route = current.get("current_route", []) if current else []
 
     # Run risk-weighted Dijkstra
-    affected_edge = (req.edge_a, req.edge_b)
+    affected_edge = (req.edge_a, req.edge_b) if req.edge_a and req.edge_b else None
     new_route, new_eta = calculate_optimal_route(
         req.source, req.destination,
         risk_score=req.risk_score,
         affected_edge=affected_edge,
+        affected_city=req.affected_city,
     )
 
     if not new_route:
@@ -209,6 +233,31 @@ async def trigger_reroute(req: RerouteRequest):
         "affected_edge": [req.edge_a, req.edge_b],
     }
 
+
+
+
+@app.post("/order/place")
+async def place_order(req: OrderPlaceRequest):
+    """
+    DEMO ENDPOINT — Simulates Person 4's XGBoost Warehouse Selector.
+    Since P4's ML model isn't built yet, this acts as a placeholder
+    so the storefront UI's "Place Order" button functions properly.
+    """
+    import random
+    
+    # Dummy ML logic: just pick Lucknow or Delhi randomly for the demo
+    warehouse = random.choice(["Lucknow", "Delhi"])
+    eta = f"{random.uniform(2.5, 8.5):.1f}h"
+    
+    # Increment the queue depth in Firebase to reflect the new order
+    new_queue_pos = increment_warehouse_queue(warehouse)
+    
+    return {
+        "status": "success",
+        "warehouse": warehouse,
+        "eta": eta,
+        "queue_position": new_queue_pos
+    }
 
 @app.post("/supply/trigger-weather-event")
 async def trigger_weather_event(req: WeatherEventRequest):
@@ -266,6 +315,9 @@ async def reset_shipment(req: ResetRequest = ResetRequest()):
     """
     global _simulation_running
     _simulation_running = False
+
+    # Reset the risk listener state so it can detect fresh events
+    reset_listener_state()
 
     # Seed the initial data
     seed_initial_data()
@@ -326,7 +378,7 @@ async def _shipment_simulation_loop():
     """
     global _simulation_running
     _simulation_running = True
-    print("[SIMULATION] 🚛 Truck simulation started")
+    print("[SIMULATION] Truck simulation started")
 
     while _simulation_running:
         try:
@@ -355,13 +407,13 @@ async def _shipment_simulation_loop():
                 # Position not in current route (maybe rerouted) — snap to first city
                 current_idx = 0
                 update_shipment_position(current_route[0])
-                print(f"[SIMULATION] 📍 Snapped truck to {current_route[0]} (route changed)")
+                print(f"[SIMULATION] Snapped truck to {current_route[0]} (route changed)")
                 await asyncio.sleep(5)
                 continue
 
             # Check if we've reached the destination
             if current_idx >= len(current_route) - 1:
-                print(f"[SIMULATION] 🏁 Truck reached destination: {current_position}")
+                print(f"[SIMULATION] [DONE] Truck reached destination: {current_position}")
                 update_shipment_status("delivered")
                 _simulation_running = False
                 break
@@ -374,15 +426,15 @@ async def _shipment_simulation_loop():
             if status == "rerouting":
                 update_shipment_status("in_transit")
 
-            print(f"[SIMULATION] 🚛 {current_position} → {next_city} "
+            print(f"[SIMULATION] {current_position} -> {next_city} "
                   f"({current_idx + 1}/{len(current_route) - 1})")
 
         except Exception as e:
-            print(f"[SIMULATION] ❌ Error: {e}")
+            print(f"[SIMULATION] [ERROR] Error: {e}")
 
         await asyncio.sleep(5)
 
-    print("[SIMULATION] 🛑 Truck simulation stopped")
+    print("[SIMULATION] [STOP] Truck simulation stopped")
 
 
 @app.post("/supply/start-simulation")

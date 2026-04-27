@@ -1,0 +1,61 @@
+{
+  "scenarios": [
+    {
+      "id": "clear_skies",
+      "label": "Clear Skies (Low Risk < 0.3)",
+      "description": "Jaipur on a dry, calm day. No disruption expected.",
+      "city": "Jaipur",
+      "lat": 26.9124,
+      "lng": 75.7873,
+      "simulated_weather": {
+        "precipitation_mm": 2.0,
+        "wind_speed_kmh": 8.0,
+        "base_travel_time": 4.0
+      },
+      "expected_risk": "< 0.3",
+      "expected_action": "No reroute. Normal transit."
+    },
+    {
+      "id": "moderate_rain",
+      "label": "Moderate Rain (Risk ~0.5)",
+      "description": "Kanpur with sustained rainfall. Elevated but manageable.",
+      "city": "Kanpur",
+      "lat": 26.4499,
+      "lng": 80.3319,
+      "simulated_weather": {
+        "precipitation_mm": 45.0,
+        "wind_speed_kmh": 35.0,
+        "base_travel_time": 5.5
+      },
+      "expected_risk": "~0.5",
+      "expected_action": "Monitor. No immediate reroute needed."
+    },
+    {
+      "id": "storm",
+      "label": "Storm (Critical Risk > 0.8)",
+      "description": "Agra under heavy storm. Highway flooding on Agra-Delhi corridor.",
+      "city": "Agra",
+      "lat": 27.1767,
+      "lng": 78.0081,
+      "simulated_weather": {
+        "precipitation_mm": 75.0,
+        "wind_speed_kmh": 90.0,
+        "base_travel_time": 2.5
+      },
+      "expected_risk": "> 0.8",
+      "expected_action": "CRITICAL: Immediate reroute via Gwalior or Kanpur."
+    }
+  ],
+  "usage": {
+    "trigger_endpoint": "POST /supply/trigger-weather-event",
+    "example_storm_payload": {
+      "edge_a": "Agra",
+      "edge_b": "Delhi",
+      "risk_score": 0.85,
+      "source": "Lucknow",
+      "destination": "Delhi",
+      "gemini_alert": null
+    },
+    "notes": "Set gemini_alert to null to let P2's Gemini service generate it automatically. Or pass a custom string to override."
+  }
+}

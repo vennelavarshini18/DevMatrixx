@@ -7,3 +7,11 @@ gymnasium
 shimmy
 numpy
 pydantic
+lightgbm
+scikit-learn
+pandas
+joblib
+matplotlib
+requests
+google-generativeai
+python-dotenv

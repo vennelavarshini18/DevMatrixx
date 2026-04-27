@@ -1,0 +1,60 @@
+"""
+generate_weather_data.py
+========================
+Generates 10,000 rows of synthetic weather-disruption data for training
+the disruption-risk prediction model.
+
+Columns
+-------
+- base_travel_time   : Uniform [1, 12] hours
+- precipitation_mm   : Uniform [0, 80] mm
+- wind_speed_kmh     : Uniform [0, 100] km/h
+- risk_score (label) : 0.3*(precip/80) + 0.1*(wind/100) + noise, clamped [0, 1]
+"""
+
+import os
+import numpy as np
+import pandas as pd
+
+SEED = 42
+N_ROWS = 10_000
+OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "..", "data")
+OUTPUT_FILE = os.path.join(OUTPUT_DIR, "synthetic_weather_disruption.csv")
+
+
+def generate() -> pd.DataFrame:
+    rng = np.random.default_rng(SEED)
+
+    base_travel_time = rng.uniform(1, 12, size=N_ROWS)
+    precipitation_mm = rng.uniform(0, 80, size=N_ROWS)
+    wind_speed_kmh = rng.uniform(0, 100, size=N_ROWS)
+
+    noise = rng.normal(0, 0.05, size=N_ROWS)
+    risk_score = (
+        0.3 * (precipitation_mm / 80.0)
+        + 0.1 * (wind_speed_kmh / 100.0)
+        + noise
+    )
+    risk_score = np.clip(risk_score, 0.0, 1.0)
+
+    df = pd.DataFrame(
+        {
+            "base_travel_time": base_travel_time,
+            "precipitation_mm": precipitation_mm,
+            "wind_speed_kmh": wind_speed_kmh,
+            "risk_score": risk_score,
+        }
+    )
+    return df
+
+
+def main():
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
+    df = generate()
+    df.to_csv(OUTPUT_FILE, index=False)
+    print(f"[OK] Generated {len(df)} rows  ->  {os.path.abspath(OUTPUT_FILE)}")
+    print(df.describe().round(4))
+
+
+if __name__ == "__main__":
+    main()

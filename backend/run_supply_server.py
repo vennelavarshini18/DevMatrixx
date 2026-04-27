@@ -16,7 +16,7 @@ Usage:
 import uvicorn
 
 if __name__ == "__main__":
-    print("\n🚀 Starting WareFlow Supply Chain Server...")
+    print("\n--- Starting WareFlow Supply Chain Server ---")
     print("   Port: 8001")
     print("   Docs: http://localhost:8001/docs")
     print("   Existing RL server: http://localhost:8000 (unaffected)\n")
