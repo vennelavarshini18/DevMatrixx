@@ -63,13 +63,13 @@ export default function OrderConfirmationCard({ orderResult }) {
         <div className="bg-white/[0.04] border border-white/[0.06] rounded-xl p-3 text-center">
           <Cpu className="w-4 h-4 text-indigo-300 mx-auto mb-1" />
           <p className="text-[0.6rem] text-gray-500 font-mono uppercase">Model</p>
-          <p className="text-white font-bold text-sm font-mono">XGBoost</p>
+          <p className="text-white font-bold text-sm font-mono text-center">Dijkstra+Risk</p>
         </div>
       </div>
 
       {/* Footer */}
       <p className="text-[0.6rem] text-gray-600 font-mono text-center">
-        Assigned in {elapsed_ms}ms &bull; Powered by XGBoost + Google Maps
+        Assigned dynamically &bull; Powered by Dijkstra Optimization + Disruptor Model
       </p>
     </div>
   );

@@ -2,12 +2,12 @@ import React, { useState } from 'react';
 import { Brain, ChevronDown, ChevronUp } from 'lucide-react';
 
 const METRICS = [
-  { label: 'Accuracy', value: '98.05%', bar: true, barWidth: 98 },
-  { label: 'Train Dataset', value: '10,000 rows', bar: false },
-  { label: 'Features', value: '4 input cols', bar: false },
-  { label: 'Inference', value: '<12ms per order', bar: false },
-  { label: 'Top Feature', value: 'distance_to_wh2', bar: false },
-  { label: 'Selection Logic', value: 'distance + queue penalty weighting', bar: false },
+  { label: 'Network', value: '22 Cities, 50+ Highways', bar: false },
+  { label: 'Warehouses', value: '10 locations', bar: false },
+  { label: 'Selection Logic', value: 'Dijkstra + Risk Penalty', bar: false },
+  { label: 'Risk Model', value: 'LightGBM Disruptor', bar: false },
+  { label: 'Queue Impact', value: '+30m per pending order', bar: false },
+  { label: 'Last Mile', value: 'Haversine local avg', bar: false },
 ];
 
 export default function WarehouseIntelligenceCard() {
@@ -21,13 +21,13 @@ export default function WarehouseIntelligenceCard() {
         <h2 className="text-lg font-bold text-white tracking-tight">Warehouse Intelligence</h2>
       </div>
       <p className="text-[#646464] text-xs font-mono tracking-wide mb-5 ml-8">
-        XGBoost selection model stats
+        Routing & disruption scoring
       </p>
 
       {/* Model name */}
       <div className="flex items-center gap-2 mb-4 p-2.5 bg-white/[0.04] rounded-xl border border-white/[0.06]">
         <Brain className="w-4 h-4 text-blue-300" />
-        <span className="text-sm text-white font-semibold">Model: XGBoost Classifier</span>
+        <span className="text-sm text-white font-semibold">Model: Dijkstra + LightGBM</span>
       </div>
 
       {/* Metrics */}
@@ -68,9 +68,9 @@ export default function WarehouseIntelligenceCard() {
           style={{ maxHeight: expanded ? '200px' : '0px', opacity: expanded ? 1 : 0 }}
         >
           <p className="text-xs text-gray-500 font-mono leading-relaxed mt-3 p-3 bg-white/[0.02] rounded-lg border border-white/[0.04]">
-            For each new order, WareFlow fetches real driving distances via Google Maps API,
-            combines them with live Firebase queue depths, and runs them through a trained
-            XGBoost classifier to select the optimal warehouse in under 12ms.
+            For each new order, WareFlow analyzes paths from 10 warehouses across 22 major Indian cities.
+            It uses Dijkstra's algorithm augmented by the LightGBM Disruptor Model which penalizes disrupted 
+            highway edges. The final choice incorporates distance, current queue depth, stock availability, and weather risk.
           </p>
         </div>
       </div>

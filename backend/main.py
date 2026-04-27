@@ -20,6 +20,17 @@ _backend_dir = os.path.dirname(os.path.abspath(__file__))
 if _backend_dir not in sys.path:
     sys.path.insert(0, _backend_dir)
 
+# Import centralized data
+from central_data import (
+    PRODUCT_CATALOG,
+    WAREHOUSES,
+    get_warehouse_next_order,
+    get_order,
+    update_order_status,
+    deduct_inventory,
+    get_all_warehouse_queues,
+)
+
 ml_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "ml"))
 if ml_dir not in sys.path:
     sys.path.insert(0, ml_dir)
@@ -71,30 +82,28 @@ CHECKPOINT_PATH = os.path.abspath(
     )
 )
 
-# --- SINGLE SOURCE OF TRUTH (IN-MEMORY) ---
+# --- SHELF LOCATIONS FROM CENTRAL DATA ---
 SHELF_LOCATIONS = {
-    "skincare": {"x": 2, "y": 3, "section": "Skincare"},
-    "grocery": {"x": 7, "y": 3, "section": "Grocery"},
-    "footwear": {"x": 11, "y": 3, "section": "Footwear"},
-    "clothes": {"x": 2, "y": 8, "section": "Clothes"},
-    "pharmacy": {"x": 7, "y": 8, "section": "Pharmacy"},
-    "electronics": {"x": 11, "y": 8, "section": "Electronics"},
-    "stationery": {"x": 4, "y": 12, "section": "Stationery"},
-    "accessories": {"x": 9, "y": 12, "section": "Accessories"}
+    cat_id: {
+        "x": cat["shelf_location"]["x"],
+        "y": cat["shelf_location"]["y"],
+        "section": cat["name"],
+    }
+    for cat_id, cat in PRODUCT_CATALOG.items()
 }
 
-inventory = {
-    "skincare": 15,
-    "grocery": 20,
-    "footwear": 5,
-    "clothes": 12,
-    "pharmacy": 30,
-    "electronics": 3,
-    "stationery": 40,
-    "accessories": 10
-}
+# Inventory now references the Delhi warehouse from central_data
+# (the RL robot operates in the Delhi warehouse)
+RL_WAREHOUSE_ID = "delhi"
 
-order_queue = [] 
+@property
+def _get_inventory():
+    return WAREHOUSES[RL_WAREHOUSE_ID]["inventory"]
+
+# Expose inventory as a dict that reads from central data
+inventory = WAREHOUSES[RL_WAREHOUSE_ID]["inventory"]
+
+order_queue = []  # Local queue fed from centralized system
 
 robot_state = {
     "status": "idle",
@@ -137,6 +146,20 @@ async def orchestrator_loop():
     await send_broadcast()
     
     while True:
+        # Try to pull from centralized queue if local queue is empty
+        if robot_state["status"] == "idle" and len(order_queue) == 0:
+            next_order_id = get_warehouse_next_order(RL_WAREHOUSE_ID)
+            if next_order_id:
+                central_order = get_order(next_order_id)
+                if central_order:
+                    update_order_status(next_order_id, "picking")
+                    order_queue.append({
+                        "category": central_order.get("category", "grocery"),
+                        "item": central_order.get("items", ["Item"])[0] if central_order.get("items") else "Item",
+                        "order_id": next_order_id,
+                    })
+                    print(f"[ORCHESTRATOR] Pulled order {next_order_id} from central queue")
+
         if robot_state["status"] == "idle" and len(order_queue) > 0:
             order_data = order_queue.pop(0)
             target = SHELF_LOCATIONS.get(order_data["category"])
@@ -225,13 +248,26 @@ async def orchestrator_loop():
                 
             if done:
                 # 3. DELIVERED
-                # Update single source of truth
+                # Update centralized inventory
                 cat_id = order_data["category"]
-                if inventory[cat_id] > 0:
-                    inventory[cat_id] -= 1
+                deduct_inventory(RL_WAREHOUSE_ID, cat_id)
                 robot_state["carrying"] = None
                 robot_state["status"] = "delivered"
                 await send_broadcast()
+                
+                # Notify centralized system
+                oid = order_data.get("order_id")
+                if oid:
+                    update_order_status(oid, "dispatched")
+                    # Try to start delivery via the unified API
+                    try:
+                        import httpx
+                        async with httpx.AsyncClient() as client:
+                            await client.post(f"http://localhost:8001/order/{oid}/start-delivery", timeout=5)
+                            print(f"[ORCHESTRATOR] Started delivery for {oid}")
+                    except Exception as e:
+                        print(f"[ORCHESTRATOR] Could not start delivery for {oid}: {e}")
+                
                 await asyncio.sleep(3.0) # Pause so UI can show the success toast
             else:
                 # Failed to return (timed out)
@@ -261,15 +297,18 @@ async def health_check():
 
 @app.get("/api/inventory")
 async def get_inventory():
-    return {"inventory": inventory, "locations": SHELF_LOCATIONS}
+    # Read inventory from centralized data (Delhi warehouse)
+    return {"inventory": WAREHOUSES[RL_WAREHOUSE_ID]["inventory"], "locations": SHELF_LOCATIONS}
 
 @app.post("/api/order")
 async def place_order(order: OrderRequest):
-    if order.category not in inventory:
+    wh_inv = WAREHOUSES[RL_WAREHOUSE_ID]["inventory"]
+    if order.category not in wh_inv:
         return {"error": "Category not found"}
-    if inventory[order.category] <= 0:
+    if wh_inv.get(order.category, 0) <= 0:
         return {"error": "Category out of stock"}
-        
+    
+    # Add to local queue (will also be handled by centralized system)
     order_queue.append({"category": order.category, "item": order.item})
     return {"status": "success", "queue_position": len(order_queue)}
 

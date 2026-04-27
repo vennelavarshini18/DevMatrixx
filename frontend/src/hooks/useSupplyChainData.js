@@ -6,12 +6,13 @@ const API_BASE = 'http://localhost:8001';
  * Custom hook that polls the P3 Supply Chain FastAPI server for real-time data.
  * Uses HTTP polling (2s interval) — works out of the box with zero extra config.
  * 
- * Returns: shipment state, graph info, warehouse queues, and action functions.
+ * Returns: shipment state, graph info, warehouse queues, active orders, and action functions.
  */
 export default function useSupplyChainData() {
   const [shipment, setShipment] = useState(null);
   const [graphInfo, setGraphInfo] = useState(null);
   const [queues, setQueues] = useState({});
+  const [activeOrders, setActiveOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [serverOnline, setServerOnline] = useState(false);
@@ -60,6 +61,20 @@ export default function useSupplyChainData() {
 
     fetchQueues();
     const interval = setInterval(fetchQueues, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Poll active orders every 5s
+  useEffect(() => {
+    const fetchOrders = () => {
+      fetch(`${API_BASE}/orders/active`)
+        .then(res => res.json())
+        .then(data => setActiveOrders(data.orders || []))
+        .catch(() => {});
+    };
+
+    fetchOrders();
+    const interval = setInterval(fetchOrders, 5000);
     return () => clearInterval(interval);
   }, []);
 
@@ -112,6 +127,7 @@ export default function useSupplyChainData() {
     shipment,
     graphInfo,
     queues,
+    activeOrders,
     loading,
     error,
     serverOnline,
@@ -121,3 +137,4 @@ export default function useSupplyChainData() {
     resetShipment,
   };
 }
+

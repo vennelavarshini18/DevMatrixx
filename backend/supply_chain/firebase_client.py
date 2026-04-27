@@ -1,5 +1,5 @@
 """
-WareFlow Supply Chain — Firebase Realtime Database Client (Person 3)
+WareFlow Supply Chain — Firebase Realtime Database Client (Unified)
 
 Centralized Firebase read/write operations for ALL supply chain modules.
 P1, P2, and P3 import from this file to avoid duplicate DB connections.
@@ -10,11 +10,21 @@ The module provides two modes:
                   This lets you develop and test all endpoints without Firebase access.
 
 The mode is auto-detected: if the service account file exists → live, otherwise → mock.
+
+Now reads warehouse data from central_data.py for the mock DB.
 """
 
 import os
 import json
+import time
 from typing import Optional, Dict, Any, List
+
+import sys
+_backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if _backend_dir not in sys.path:
+    sys.path.insert(0, _backend_dir)
+
+from central_data import WAREHOUSES
 
 # ─── ATTEMPT FIREBASE IMPORT ────────────────────────────────────────────────
 
@@ -31,14 +41,21 @@ except ImportError:
 
 
 # ─── MOCK IN-MEMORY DATABASE ────────────────────────────────────────────────
-# Used when Firebase credentials aren't set up yet.
-# Mimics the exact same schema so all endpoints work identically.
+# Uses centralized warehouse data for all 10 warehouses.
+
+def _build_mock_warehouses() -> Dict[str, Any]:
+    """Build mock warehouse entries from centralized data."""
+    result = {}
+    for wh_id, wh in WAREHOUSES.items():
+        result[wh_id] = {
+            "pending": wh["pending"],
+            "coords": list(wh["coords"]),
+            "city": wh["city"],
+        }
+    return result
 
 _mock_db: Dict[str, Any] = {
-    "warehouses": {
-        "lucknow": {"pending": 0, "coords": [26.8467, 80.9462]},
-        "delhi": {"pending": 0, "coords": [28.6139, 77.2090]}
-    },
+    "warehouses": _build_mock_warehouses(),
     "active_shipment": {
         "order_id": "ORD-001",
         "status": "in_transit",
@@ -47,7 +64,8 @@ _mock_db: Dict[str, Any] = {
         "eta_hours": 6.5,
         "gemini_alert": None,
         "position": "Lucknow"
-    }
+    },
+    "orders": {},
 }
 
 _using_mock = True  # Will be set to False if Firebase initializes successfully
@@ -174,12 +192,24 @@ def update_shipment_status(status: str) -> None:
     ref.update({"status": status})
 
 
+def set_active_shipment(shipment_data: Dict[str, Any]) -> None:
+    """Write a complete active shipment object (for new orders)."""
+    if _using_mock:
+        _mock_db["active_shipment"] = dict(shipment_data)
+        print(f"[MOCK-DB] Active shipment set: {shipment_data.get('order_id')}")
+        return
+
+    ref = _firebase_db.reference("/active_shipment")
+    ref.set(shipment_data)
+    print(f"[FIREBASE] Active shipment set: {shipment_data.get('order_id')}")
+
+
 # ─── WAREHOUSE QUEUE OPERATIONS ─────────────────────────────────────────────
 
 def get_warehouse_queues() -> Dict[str, int]:
     """
     Read pending order counts for all warehouses.
-    Returns: {"lucknow": 3, "delhi": 1}
+    Returns: {"delhi": 3, "mumbai": 1, "bangalore": 0, ...}
     """
     if _using_mock:
         queues = {}
@@ -234,6 +264,53 @@ def decrement_warehouse_queue(wh_id: str) -> int:
     return new_val
 
 
+# ─── ORDER OPERATIONS ───────────────────────────────────────────────────────
+
+def write_order_to_firebase(order: Dict[str, Any]) -> None:
+    """Write an order to the orders collection in Firebase."""
+    order_id = order.get("order_id", "")
+    if not order_id:
+        return
+
+    if _using_mock:
+        _mock_db.setdefault("orders", {})[order_id] = dict(order)
+        print(f"[MOCK-DB] Order written: {order_id}")
+        return
+
+    ref = _firebase_db.reference(f"/orders/{order_id}")
+    ref.set(order)
+    print(f"[FIREBASE] Order written: {order_id}")
+
+
+def get_order_from_firebase(order_id: str) -> Optional[Dict[str, Any]]:
+    """Read an order from Firebase."""
+    if _using_mock:
+        return _mock_db.get("orders", {}).get(order_id)
+
+    ref = _firebase_db.reference(f"/orders/{order_id}")
+    return ref.get()
+
+
+def update_order_in_firebase(order_id: str, updates: Dict[str, Any]) -> None:
+    """Partially update an order in Firebase."""
+    if _using_mock:
+        if order_id in _mock_db.get("orders", {}):
+            _mock_db["orders"][order_id].update(updates)
+        return
+
+    ref = _firebase_db.reference(f"/orders/{order_id}")
+    ref.update(updates)
+
+
+def get_all_orders_from_firebase() -> Dict[str, Any]:
+    """Read all orders from Firebase."""
+    if _using_mock:
+        return dict(_mock_db.get("orders", {}))
+
+    ref = _firebase_db.reference("/orders")
+    return ref.get() or {}
+
+
 # ─── SEED / RESET ───────────────────────────────────────────────────────────
 
 def seed_initial_data() -> None:
@@ -241,7 +318,6 @@ def seed_initial_data() -> None:
     Write the agreed-upon initial schema to Firebase.
     Safe to call multiple times — it overwrites to a known good state.
     """
-    import time
     from supply_chain.firebase_config import INITIAL_SCHEMA
 
     # Deep copy + generate a fresh order ID to make each reset visually distinct

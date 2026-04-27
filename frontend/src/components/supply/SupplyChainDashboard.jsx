@@ -199,17 +199,20 @@ export default function SupplyChainDashboard({ onBack }) {
             )}
 
             {/* City Scan Buttons */}
-            <div className="flex gap-1 mt-1">
+            <div className="grid grid-cols-3 gap-1 mt-1">
               {[
-                { city: 'Lucknow', lat: 26.8467, lng: 80.9462 },
-                { city: 'Agra',    lat: 27.1767, lng: 78.0081 },
-                { city: 'Delhi',   lat: 28.6139, lng: 77.2090 },
+                { city: 'Delhi',     lat: 28.6139, lng: 77.2090 },
+                { city: 'Mumbai',    lat: 19.0760, lng: 72.8777 },
+                { city: 'Bangalore', lat: 12.9716, lng: 77.5946 },
+                { city: 'Lucknow',   lat: 26.8467, lng: 80.9462 },
+                { city: 'Agra',      lat: 27.1767, lng: 78.0081 },
+                { city: 'Hyderabad', lat: 17.3850, lng: 78.4867 },
               ].map((s) => (
                 <button
                   key={s.city}
                   onClick={() => scanCity(s.city, s.lat, s.lng)}
                   disabled={p2Loading}
-                  className={`flex-1 py-1.5 text-[0.5rem] font-bold tracking-wider uppercase rounded-md border transition-all ${
+                  className={`py-1.5 text-[0.45rem] font-bold tracking-wider uppercase rounded-md border transition-all ${
                     p2Data?.city === s.city
                       ? 'bg-blue-500/15 border-blue-500/40 text-blue-400'
                       : 'bg-transparent border-white/5 text-gray-600 hover:text-gray-300 hover:border-white/15'
@@ -255,15 +258,15 @@ export default function SupplyChainDashboard({ onBack }) {
           </Panel>
 
           {/* ── WAREHOUSE QUEUES ─────── */}
-          <Panel title="WAREHOUSE QUEUES">
-            <div className="grid grid-cols-2 gap-2">
+          <Panel title={`WAREHOUSE QUEUES (${Object.keys(queues).length})`}>
+            <div className="grid grid-cols-2 gap-1.5 max-h-[220px] overflow-y-auto pr-1">
               {Object.entries(queues).map(([whId, pending]) => (
-                <div key={whId} className="bg-[#0f1020] border border-white/5 rounded-lg p-3 text-center">
-                  <div className="text-[0.6rem] font-mono tracking-[0.15em] uppercase text-gray-500 mb-1">{whId}</div>
-                  <div className={`text-2xl font-bold font-mono ${pending > 0 ? 'text-amber-400' : 'text-emerald-400'}`}>
+                <div key={whId} className="bg-[#0f1020] border border-white/5 rounded-lg p-2 text-center">
+                  <div className="text-[0.5rem] font-mono tracking-[0.12em] uppercase text-gray-500 mb-0.5">{whId}</div>
+                  <div className={`text-lg font-bold font-mono ${pending > 0 ? 'text-amber-400' : 'text-emerald-400'}`}>
                     {pending}
                   </div>
-                  <div className="text-[0.55rem] text-gray-600 mt-0.5">pending</div>
+                  <div className="text-[0.45rem] text-gray-600">pending</div>
                 </div>
               ))}
               {Object.keys(queues).length === 0 && (
@@ -303,7 +306,7 @@ export default function SupplyChainDashboard({ onBack }) {
           {/* ── GRAPH STATS ──────────── */}
           {graphInfo && (
             <div className="text-[0.6rem] font-mono text-gray-600 text-center tracking-widest uppercase mt-auto pt-2 border-t border-white/5">
-              {graphInfo.total_cities} Cities · {graphInfo.total_highways} Highways · Dijkstra Routing
+              {graphInfo.total_cities} Cities · {graphInfo.total_highways} Highways · {graphInfo.total_warehouses || 10} WH · Dijkstra
             </div>
           )}
         </div>

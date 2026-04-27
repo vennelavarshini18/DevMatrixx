@@ -5,7 +5,7 @@ const CATEGORIES = [
     id: 'grocery', 
     name: 'Grocery', 
     image: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=600', 
-    items: ['Milk', 'Eggs', 'Chocolates', 'Detergent', 'Flour', 'Bread'],
+    items: ['Milk', 'Eggs', 'Chocolates', 'Detergent', 'Flour', 'Bread', 'Rice', 'Oil'],
     neon: 'hover:shadow-[0_0_15px_rgba(0,255,255,0.4)] hover:border-cyan-400',
     textNeon: 'group-hover:text-cyan-400',
     btnNeon: 'hover:border-cyan-400 hover:bg-cyan-900/30 hover:text-cyan-300',
@@ -15,7 +15,7 @@ const CATEGORIES = [
     id: 'electronics', 
     name: 'Electronics', 
     image: 'https://images.unsplash.com/photo-1498049794561-7780e7231661?auto=format&fit=crop&q=80&w=600', 
-    items: ['Laptop', 'Smartwatch', 'Headphones', 'Cables'],
+    items: ['Laptop', 'Smartwatch', 'Headphones', 'Cables', 'Power Bank', 'Mouse'],
     neon: 'hover:shadow-[0_0_15px_rgba(138,43,226,0.4)] hover:border-purple-500',
     textNeon: 'group-hover:text-purple-400',
     btnNeon: 'hover:border-purple-500 hover:bg-purple-900/30 hover:text-purple-300',
@@ -25,7 +25,7 @@ const CATEGORIES = [
     id: 'pharmacy', 
     name: 'Pharmacy', 
     image: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&q=80&w=600', 
-    items: ['Vitamins', 'Painkillers', 'First Aid', 'Masks'],
+    items: ['Vitamins', 'Painkillers', 'First Aid', 'Masks', 'Thermometer', 'Bandages'],
     neon: 'hover:shadow-[0_0_15px_rgba(57,255,20,0.4)] hover:border-green-400',
     textNeon: 'group-hover:text-green-400',
     btnNeon: 'hover:border-green-400 hover:bg-green-900/30 hover:text-green-300',
@@ -35,7 +35,7 @@ const CATEGORIES = [
     id: 'skincare', 
     name: 'Skincare', 
     image: 'https://images.unsplash.com/photo-1556228578-0d85b1a4d571?auto=format&fit=crop&q=80&w=600', 
-    items: ['Face Cream', 'Sunscreen', 'Serum', 'Lotion'],
+    items: ['Face Cream', 'Sunscreen', 'Serum', 'Lotion', 'Face Wash', 'Toner'],
     neon: 'hover:shadow-[0_0_15px_rgba(255,0,255,0.4)] hover:border-fuchsia-500',
     textNeon: 'group-hover:text-fuchsia-400',
     btnNeon: 'hover:border-fuchsia-500 hover:bg-fuchsia-900/30 hover:text-fuchsia-300',
@@ -45,7 +45,7 @@ const CATEGORIES = [
     id: 'footwear', 
     name: 'Footwear', 
     image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&q=80&w=600', 
-    items: ['Sneakers', 'Boots', 'Sandals', 'Socks'],
+    items: ['Sneakers', 'Boots', 'Sandals', 'Socks', 'Running Shoes', 'Loafers'],
     neon: 'hover:shadow-[0_0_15px_rgba(255,69,0,0.4)] hover:border-orange-500',
     textNeon: 'group-hover:text-orange-400',
     btnNeon: 'hover:border-orange-500 hover:bg-orange-900/30 hover:text-orange-300',
@@ -55,7 +55,7 @@ const CATEGORIES = [
     id: 'clothes', 
     name: 'Clothes', 
     image: 'https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&q=80&w=600', 
-    items: ['T-Shirt', 'Jeans', 'Jacket', 'Sweater'],
+    items: ['T-Shirt', 'Jeans', 'Jacket', 'Sweater', 'Hoodie', 'Shorts'],
     neon: 'hover:shadow-[0_0_15px_rgba(255,255,0,0.4)] hover:border-yellow-400',
     textNeon: 'group-hover:text-yellow-400',
     btnNeon: 'hover:border-yellow-400 hover:bg-yellow-900/30 hover:text-yellow-300',
@@ -65,7 +65,7 @@ const CATEGORIES = [
     id: 'stationery', 
     name: 'Stationery', 
     image: 'https://images.unsplash.com/photo-1513542789411-b6a5d4f31634?auto=format&fit=crop&q=80&w=600', 
-    items: ['Notebook', 'Pens', 'Markers', 'Stapler'],
+    items: ['Notebook', 'Pens', 'Markers', 'Stapler', 'Scissors', 'Tape'],
     neon: 'hover:shadow-[0_0_15px_rgba(65,105,225,0.4)] hover:border-blue-500',
     textNeon: 'group-hover:text-blue-400',
     btnNeon: 'hover:border-blue-500 hover:bg-blue-900/30 hover:text-blue-300',
@@ -75,7 +75,7 @@ const CATEGORIES = [
     id: 'accessories', 
     name: 'Accessories', 
     image: 'https://images.unsplash.com/photo-1523206489230-c012c64b2b48?auto=format&fit=crop&q=80&w=600', 
-    items: ['Watch', 'Sunglasses', 'Belt', 'Wallet'],
+    items: ['Watch', 'Sunglasses', 'Belt', 'Wallet', 'Backpack', 'Umbrella'],
     neon: 'hover:shadow-[0_0_15px_rgba(200,200,200,0.4)] hover:border-gray-300',
     textNeon: 'group-hover:text-gray-300',
     btnNeon: 'hover:border-gray-300 hover:bg-gray-800/50 hover:text-gray-200',
@@ -83,37 +83,76 @@ const CATEGORIES = [
   }
 ];
 
+// Unified API on port 8001
+const API_BASE = 'http://localhost:8001';
+
 export default function NexusStorefront({ onOrderPlaced }) {
   const [inventory, setInventory] = useState({});
   const [loading, setLoading] = useState(true);
+  const [orderConfirmation, setOrderConfirmation] = useState(null);
 
   useEffect(() => {
-    fetch('http://127.0.0.1:8000/api/inventory')
+    // Fetch aggregated inventory from unified API
+    fetch(`${API_BASE}/api/inventory`)
       .then(res => res.json())
       .then(data => {
         setInventory(data.inventory);
         setLoading(false);
       })
       .catch(err => {
-        console.error("Backend offline?");
-        setLoading(false);
+        // Fallback to old RL server
+        fetch('http://127.0.0.1:8000/api/inventory')
+          .then(res => res.json())
+          .then(data => {
+            setInventory(data.inventory);
+            setLoading(false);
+          })
+          .catch(() => {
+            console.error("Both backends offline");
+            setLoading(false);
+          });
       });
   }, []);
 
   const placeOrder = async (categoryId, itemName) => {
     try {
-      const res = await fetch('http://127.0.0.1:8000/api/order', {
+      // Use unified API — Dijkstra selects best warehouse
+      const res = await fetch(`${API_BASE}/order/place`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ category: categoryId, item: itemName })
+        body: JSON.stringify({
+          order_id: `ORD-${Date.now()}`,
+          customer_coords: [27.1, 78.0], // Default coords (Agra area)
+          items: [itemName],
+          category: categoryId,
+        })
       });
       if (res.ok) {
-        if(onOrderPlaced) onOrderPlaced();
+        const data = await res.json();
+        setOrderConfirmation(data);
+        
+        // Auto-dismiss confirmation and navigate
+        setTimeout(() => {
+          setOrderConfirmation(null);
+          if(onOrderPlaced) onOrderPlaced();
+        }, 3000);
       } else {
         const errorData = await res.json();
-        alert(`Failed: ${errorData.error}`);
+        alert(`Failed: ${errorData.detail || errorData.error}`);
       }
-    } catch (err) { alert("Network Error"); }
+    } catch (err) {
+      // Fallback to old RL server  
+      try {
+        const res = await fetch('http://127.0.0.1:8000/api/order', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ category: categoryId, item: itemName })
+        });
+        if (res.ok && onOrderPlaced) onOrderPlaced();
+      } catch {
+        alert("Network Error — backends offline");
+      }
+    }
   };
 
   if (loading) return (
@@ -128,6 +167,24 @@ export default function NexusStorefront({ onOrderPlaced }) {
       {/* Background vignette wrapper to simulate dark warehouse alley */}
       <div className="fixed inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-transparent via-[#000000d0] to-[#000000] z-0"></div>
 
+      {/* Order Confirmation Toast */}
+      {orderConfirmation && (
+        <div className="fixed top-6 right-6 z-50 animate-[slideIn_0.4s_ease-out] max-w-sm">
+          <div className="bg-emerald-950/90 backdrop-blur-md border border-emerald-500/40 rounded-xl p-4 shadow-[0_0_30px_rgba(16,185,129,0.15)]">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-emerald-400 text-lg">✅</span>
+              <span className="text-sm font-bold text-emerald-300 tracking-wide uppercase">Order Placed!</span>
+            </div>
+            <div className="space-y-1 text-xs font-mono text-gray-300">
+              <div>Warehouse: <span className="text-emerald-400 font-bold">{orderConfirmation.warehouse_city || orderConfirmation.warehouse}</span></div>
+              <div>Route: <span className="text-blue-400">{(orderConfirmation.route || []).join(' → ')}</span></div>
+              <div>ETA: <span className="text-amber-400">{orderConfirmation.eta}</span></div>
+              <div>Queue: <span className="text-purple-400">#{orderConfirmation.queue_position}</span></div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-7xl mx-auto relative z-10">
         <header className="mb-16 mt-8 flex flex-col items-center border-b border-gray-800/50 pb-8">
           <div className="h-[1px] w-48 bg-gradient-to-r from-transparent via-cyan-500 to-transparent mb-6 opacity-30"></div>
@@ -135,7 +192,7 @@ export default function NexusStorefront({ onOrderPlaced }) {
             STORE <span className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-300 via-indigo-300 to-purple-300">FRONT</span>
           </h1>
           <p className="text-[#646464] uppercase tracking-[0.3em] text-[0.65rem] font-mono">
-            Autonomous Fulfillment Routing
+            Autonomous Fulfillment Routing · 10 Warehouses · Dijkstra Optimization
           </p>
           <div className="h-[1px] w-48 bg-gradient-to-r from-transparent via-purple-500 to-transparent mt-6 opacity-30"></div>
         </header>
@@ -211,6 +268,13 @@ export default function NexusStorefront({ onOrderPlaced }) {
           })}
         </div>
       </div>
+
+      <style>{`
+        @keyframes slideIn {
+          from { transform: translateX(100%); opacity: 0; }
+          to { transform: translateX(0); opacity: 1; }
+        }
+      `}</style>
     </div>
   );
 }

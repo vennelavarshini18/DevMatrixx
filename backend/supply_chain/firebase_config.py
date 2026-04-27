@@ -10,6 +10,7 @@ HOW TO SET UP:
 """
 
 import os
+from central_data import WAREHOUSES
 
 # Path to your Firebase service account JSON key file
 # Download from: Firebase Console → Project Settings → Service Accounts → Generate New Private Key
@@ -25,11 +26,16 @@ DATABASE_URL = "https://wareflow-f8b9f-default-rtdb.firebaseio.com/"
 # --- Initial Firebase Schema ---
 # This is the agreed-upon schema that ALL 4 persons must follow.
 # P3 seeds this data on first run if the database is empty.
+# Now supports 10 warehouses from centralized data.
 
 INITIAL_SCHEMA = {
     "warehouses": {
-        "lucknow": {"pending": 0, "coords": [26.8467, 80.9462]},
-        "delhi": {"pending": 0, "coords": [28.6139, 77.2090]}
+        wh_id: {
+            "pending": 0,
+            "coords": wh["coords"],
+            "city": wh["city"],
+        }
+        for wh_id, wh in WAREHOUSES.items()
     },
     "active_shipment": {
         "order_id": "ORD-001",
@@ -39,5 +45,6 @@ INITIAL_SCHEMA = {
         "eta_hours": 6.5,
         "gemini_alert": None,
         "position": "Lucknow"
-    }
+    },
+    "orders": {},
 }
