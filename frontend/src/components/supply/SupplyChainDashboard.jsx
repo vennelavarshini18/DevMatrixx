@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import useSupplyChainData from '../../hooks/useSupplyChainData';
 import SupplyMap from './SupplyMap';
+import DisruptionCard from '../DisruptionCard';
 
 const P2_API = 'http://localhost:8000';
 
@@ -140,92 +141,15 @@ export default function SupplyChainDashboard({ onBack }) {
                 {(riskScore * 100).toFixed(0)}% — {riskLabel}
               </span>
             </Row>
-          </Panel>
-
-          {/* ── P2: DISRUPTION INTELLIGENCE ── */}
-          <Panel title="DISRUPTION INTELLIGENCE">
-            {/* Risk Score with animated bar */}
-            <div className="space-y-1.5">
-              <div className="flex justify-between items-end">
-                <span className="text-[0.55rem] font-mono tracking-[0.12em] uppercase text-gray-500">Risk Score</span>
-                <span className={`text-lg font-bold font-mono tabular-nums ${
-                  (p2Data?.risk_score ?? riskScore) > 0.7 ? 'text-red-400' :
-                  (p2Data?.risk_score ?? riskScore) > 0.4 ? 'text-amber-400' : 'text-emerald-400'
-                }`}>
-                  {((p2Data?.risk_score ?? riskScore) * 100).toFixed(0)}%
-                </span>
-              </div>
-              <div className="h-1.5 bg-[#1a1b2e] rounded-full overflow-hidden">
-                <div
-                  className={`h-full rounded-full transition-all duration-700 ease-out ${
-                    (p2Data?.risk_score ?? riskScore) > 0.7 ? 'bg-gradient-to-r from-red-600 to-red-400' :
-                    (p2Data?.risk_score ?? riskScore) > 0.4 ? 'bg-gradient-to-r from-amber-600 to-amber-400' :
-                    'bg-gradient-to-r from-emerald-600 to-emerald-400'
-                  }`}
-                  style={{ width: `${(p2Data?.risk_score ?? riskScore) * 100}%` }}
-                />
-              </div>
-            </div>
-
-            {/* Weather Stats */}
-            <div className="grid grid-cols-2 gap-1.5 mt-1">
-              <div className="bg-[#0f1020] border border-white/5 rounded-lg p-2 text-center">
-                <div className="text-[0.5rem] font-mono tracking-[0.12em] uppercase text-gray-600 mb-0.5">Precip</div>
-                <div className="text-sm font-bold font-mono text-cyan-400">
-                  {p2Data?.weather?.precipitation_mm !== undefined
-                    ? `${p2Data.weather.precipitation_mm.toFixed(1)} mm`
-                    : '—'}
+            {shipment?.weather && (
+              <>
+                <div className="border-t border-white/5 my-2 pt-2 text-[0.6rem] font-mono tracking-widest text-gray-500 uppercase">
+                  Weather Intel
                 </div>
-              </div>
-              <div className="bg-[#0f1020] border border-white/5 rounded-lg p-2 text-center">
-                <div className="text-[0.5rem] font-mono tracking-[0.12em] uppercase text-gray-600 mb-0.5">Wind</div>
-                <div className="text-sm font-bold font-mono text-cyan-400">
-                  {p2Data?.weather?.wind_speed_kmh !== undefined
-                    ? `${p2Data.weather.wind_speed_kmh.toFixed(1)} km/h`
-                    : '—'}
-                </div>
-              </div>
-            </div>
-
-            {/* Gemini Alert Terminal */}
-            {(p2Data?.gemini_alert || shipment?.gemini_alert) && (
-              <div className="bg-black/50 border border-white/5 rounded-lg p-2.5 relative overflow-hidden mt-1">
-                <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-blue-500/40 to-transparent" />
-                <p className="text-[0.65rem] leading-relaxed text-gray-300 font-mono">
-                  <span className="text-blue-400 font-bold mr-1">{'>'}</span>
-                  {p2Data?.gemini_alert || shipment?.gemini_alert}
-                </p>
-              </div>
+                <Row label="Precipitation" value={`${shipment.weather.precipitation_mm?.toFixed(1) || '0.0'} mm`} mono />
+                <Row label="Wind Speed" value={`${shipment.weather.wind_speed_kmh?.toFixed(1) || '0.0'} km/h`} mono />
+              </>
             )}
-
-            {/* City Scan Buttons */}
-            <div className="grid grid-cols-3 gap-1 mt-1">
-              {[
-                { city: 'Delhi',     lat: 28.6139, lng: 77.2090 },
-                { city: 'Mumbai',    lat: 19.0760, lng: 72.8777 },
-                { city: 'Bangalore', lat: 12.9716, lng: 77.5946 },
-                { city: 'Lucknow',   lat: 26.8467, lng: 80.9462 },
-                { city: 'Agra',      lat: 27.1767, lng: 78.0081 },
-                { city: 'Hyderabad', lat: 17.3850, lng: 78.4867 },
-              ].map((s) => (
-                <button
-                  key={s.city}
-                  onClick={() => scanCity(s.city, s.lat, s.lng)}
-                  disabled={p2Loading}
-                  className={`py-1.5 text-[0.45rem] font-bold tracking-wider uppercase rounded-md border transition-all ${
-                    p2Data?.city === s.city
-                      ? 'bg-blue-500/15 border-blue-500/40 text-blue-400'
-                      : 'bg-transparent border-white/5 text-gray-600 hover:text-gray-300 hover:border-white/15'
-                  } ${p2Loading ? 'opacity-50 cursor-wait' : 'cursor-pointer active:scale-95'}`}
-                >
-                  {p2Loading && p2Data?.city === s.city ? '...' : s.city}
-                </button>
-              ))}
-            </div>
-
-            <div className="text-[0.45rem] font-mono text-gray-700 text-center tracking-widest mt-0.5">
-              LightGBM + Open-Meteo + Gemini Flash
-            </div>
           </Panel>
 
           {/* ── ROUTE ────────────────── */}
@@ -275,6 +199,23 @@ export default function SupplyChainDashboard({ onBack }) {
             </div>
           </Panel>
 
+          {/* ── DISRUPTION INTEL ────── */}
+          <DisruptionCard />
+
+          {/* ── GEMINI ALERT ────────── */}
+          {shipment?.gemini_alert && (
+            <div className="bg-red-950/40 border border-red-500/30 rounded-lg p-3 relative overflow-hidden flex-shrink-0 animate-[fadeIn_0.3s_ease-out]">
+              <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-red-500/40 to-transparent" />
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-sm">⚠️</span>
+                <span className="text-[0.6rem] font-bold text-red-400 tracking-wide uppercase">Weather Alert</span>
+              </div>
+              <p className="text-[0.65rem] text-gray-300 leading-relaxed font-mono">
+                {shipment.gemini_alert}
+              </p>
+            </div>
+          )}
+
           {/* ── DEMO CONTROLS ───────── */}
           <Panel title="DEMO CONTROLS">
             <div className="flex flex-col gap-2">
@@ -312,38 +253,6 @@ export default function SupplyChainDashboard({ onBack }) {
         </div>
       </div>
 
-      {/* ── GEMINI ALERT OVERLAY (slides from bottom) ───────────────── */}
-      {shipment?.gemini_alert && (
-        <div className="absolute bottom-0 left-0 right-0 z-30 p-4 animate-[slideUp_0.5s_ease-out]">
-          <div className="max-w-3xl mx-auto bg-red-950/90 backdrop-blur-md border border-red-500/40 rounded-xl p-4 shadow-[0_0_40px_rgba(239,68,68,0.15)]">
-            <div className="flex items-start gap-3">
-              <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-red-500/20 flex items-center justify-center text-xl">
-                ⚠️
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-sm font-bold text-red-400 tracking-wide uppercase">Weather Disruption Detected</span>
-                  <span className="text-[0.6rem] px-2 py-0.5 rounded-full bg-red-500/20 border border-red-500/30 text-red-300 font-mono font-bold">
-                    RISK {(riskScore * 100).toFixed(0)}%
-                  </span>
-                </div>
-                <p className="text-sm text-gray-300 leading-relaxed">{shipment.gemini_alert}</p>
-                <p className="text-[0.6rem] text-gray-500 font-mono mt-2 tracking-wider">
-                  Route automatically optimized via Dijkstra Graph Engine · Powered by Gemini Flash
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Slide-up animation keyframe */}
-      <style>{`
-        @keyframes slideUp {
-          from { transform: translateY(100%); opacity: 0; }
-          to { transform: translateY(0); opacity: 1; }
-        }
-      `}</style>
     </div>
   );
 }

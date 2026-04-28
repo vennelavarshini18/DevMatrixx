@@ -47,7 +47,7 @@ export default function App() {
 
   // Person 3's Route Optimizer Dashboard (map, simulation, storm demo)
   if (currentView === 'supplyDashboard') {
-    return <SupplyChainDashboard onBack={() => setCurrentView('landing')} />
+    return <SupplyChainDashboard onBack={() => setCurrentView('warehouse')} />
   }
 
   return (

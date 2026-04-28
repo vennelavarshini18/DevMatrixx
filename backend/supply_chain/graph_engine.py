@@ -196,9 +196,11 @@ def find_best_warehouse(
         )
         last_mile_hours = last_mile_km / 40.0  # 40 km/h average for last mile
         
-        # Total score: delivery time + queue wait + last mile
+        # XGBoost P1 Training Logic / Heuristic
+        # score = distance_to_warehouse * (1 + 0.1 * queue_size_at_warehouse)
         queue_depth = wh["pending"]
-        total_eta = delivery_eta + last_mile_hours + (queue_depth * QUEUE_PENALTY)
+        total_distance_eta = delivery_eta + last_mile_hours
+        cost_score = total_distance_eta * (1 + 0.1 * queue_depth)
         
         results.append({
             "warehouse_id": wh_id,
@@ -207,7 +209,7 @@ def find_best_warehouse(
             "delivery_eta_hours": round(delivery_eta, 1),
             "last_mile_hours": round(last_mile_hours, 1),
             "queue_depth": queue_depth,
-            "total_score": round(total_eta, 1),
+            "total_score": round(cost_score, 1),
             "stock": wh.get("inventory", {}).get(category, 0) if category else -1,
         })
     

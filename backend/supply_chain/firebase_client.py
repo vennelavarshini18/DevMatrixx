@@ -182,6 +182,20 @@ def update_gemini_alert(alert_text: Optional[str]) -> None:
     print(f"[FIREBASE] Gemini alert set: {safe_text[:50] if safe_text else '(cleared)'}")
 
 
+def update_weather_stats(precipitation_mm: float, wind_speed_kmh: float) -> None:
+    """Update weather conditions for the active shipment."""
+    data = {
+        "precipitation_mm": precipitation_mm,
+        "wind_speed_kmh": wind_speed_kmh
+    }
+    if _using_mock:
+        _mock_db["active_shipment"]["weather"] = data
+        return
+
+    ref = _firebase_db.reference("/active_shipment/weather")
+    ref.set(data)
+
+
 def update_shipment_status(status: str) -> None:
     """Update the shipment status (e.g., 'in_transit', 'delivered', 'rerouting')."""
     if _using_mock:

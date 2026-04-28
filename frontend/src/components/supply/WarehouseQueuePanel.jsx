@@ -48,7 +48,11 @@ export default function WarehouseQueuePanel({ warehouses, highlightWh }) {
     return 'bg-red-500';
   };
 
-  const warehouseEntries = warehouses ? Object.entries(warehouses) : [];
+  const VALID_WAREHOUSES = ['delhi', 'mumbai', 'bangalore', 'hyderabad', 'chennai', 'kolkata', 'lucknow', 'jaipur', 'ahmedabad', 'pune'];
+
+  const warehouseEntries = warehouses 
+    ? Object.entries(warehouses).filter(([id]) => VALID_WAREHOUSES.includes(id.toLowerCase()))
+    : [];
 
   // Loading skeleton
   if (!warehouses) {

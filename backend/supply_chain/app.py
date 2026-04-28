@@ -85,6 +85,7 @@ from supply_chain.firebase_client import (
     seed_initial_data,
     get_full_database,
     is_mock_mode,
+    update_weather_stats,
 )
 from supply_chain.risk_listener import (
     risk_score_listener_loop,
@@ -140,7 +141,22 @@ async def lifespan(app: FastAPI):
     print(f"  Warehouses: {len(WAREHOUSES)}")
     print(f"  Cities: {len(CITY_COORDS)}")
     print(f"{'='*60}\n")
-
+    # Ensure all 10 warehouses exist in Firebase
+    if is_live:
+        from supply_chain.firebase_client import _firebase_db
+        ref = _firebase_db.reference("/warehouses")
+        existing = ref.get() or {}
+        updates = {}
+        for wh_id, wh in WAREHOUSES.items():
+            if wh_id not in existing:
+                updates[wh_id] = {
+                    "pending": wh["pending"],
+                    "coords": list(wh["coords"]),
+                    "city": wh["city"]
+                }
+        if updates:
+            ref.update(updates)
+            print(f"  [DB SYNC] Added {len(updates)} new warehouses to Firebase.")
     # Start the Firebase risk_score listener (Person 2 → Person 3 safety net)
     risk_listener_task = asyncio.create_task(risk_score_listener_loop())
 
@@ -288,6 +304,22 @@ async def order_status(order_id: str):
     if not order:
         raise HTTPException(status_code=404, detail=f"Order {order_id} not found")
     return order
+
+
+@app.get("/warehouses/{warehouse_id}/next-order")
+async def get_next_order(warehouse_id: str):
+    """
+    Returns the next order in the queue for a warehouse and pops it.
+    Used by the RL robot (port 8000) to fetch its next task.
+    """
+    order_id = get_warehouse_next_order(warehouse_id)
+    if not order_id:
+        return {"order_id": None}
+    
+    order = get_order(order_id)
+    if order:
+        update_order_status(order_id, "picking")
+    return {"order_id": order_id, "order": order}
 
 
 @app.post("/order/{order_id}/warehouse-complete")
@@ -471,26 +503,54 @@ async def trigger_reroute(req: RerouteRequest):
 
 @app.post("/supply/trigger-weather-event")
 async def trigger_weather_event(req: WeatherEventRequest):
-    """DEMO ENDPOINT — Simulates a weather disruption."""
+    """DEMO ENDPOINT — Simulates a weather disruption on the active shipment."""
+    current = get_active_shipment()
+    if not current or not current.get("current_route"):
+        raise HTTPException(status_code=400, detail="No active shipment to disrupt")
+    
+    route = current["current_route"]
+    source = route[0]
+    destination = route[-1]
+    
+    print(f"[DEMO] Triggering storm. Active shipment route: {' -> '.join(route)}")
+    print(f"[DEMO] Calculated source: {source}, destination: {destination}")
+
     affected_edge = (req.edge_a, req.edge_b)
     new_route, new_eta = calculate_optimal_route(
-        req.source, req.destination,
+        source, destination,
         risk_score=req.risk_score,
         affected_edge=affected_edge,
     )
 
     if not new_route:
-        raise HTTPException(status_code=500, detail=f"No viable route from {req.source} to {req.destination}")
+        raise HTTPException(status_code=500, detail=f"No viable route from {source} to {destination}")
 
     update_shipment_route(new_route, new_eta, req.risk_score)
 
-    alert_text = req.gemini_alert or (
-        f"⚠️ WEATHER ALERT: Severe storm detected on {req.edge_a}–{req.edge_b} highway. "
-        f"Risk score: {req.risk_score:.0%}. Shipment rerouted via {' → '.join(new_route)}. "
-        f"New ETA: {new_eta} hours."
-    )
+    if new_route == route:
+        if len(new_route) == 1:
+            alert_text = req.gemini_alert or (
+                f"✅ WEATHER UPDATE: Severe storm detected on {req.edge_a}–{req.edge_b} highway. "
+                f"Your local {source} delivery is unaffected! ETA remains same."
+            )
+        else:
+            alert_text = req.gemini_alert or (
+                f"✅ WEATHER UPDATE: Severe storm on {req.edge_a}–{req.edge_b} highway. "
+                f"Your shipment's path ({' → '.join(new_route)}) safely bypasses the disruption. "
+                f"ETA remains {new_eta} hours."
+            )
+    else:
+        alert_text = req.gemini_alert or (
+            f"⚠️ WEATHER ALERT: Severe storm detected on {req.edge_a}–{req.edge_b} highway. "
+            f"Risk score: {req.risk_score:.0%}. Shipment rerouted via {' → '.join(new_route)}. "
+            f"New ETA: {new_eta} hours."
+        )
+
     update_gemini_alert(alert_text)
-    update_shipment_status("rerouting")
+    update_weather_stats(precipitation_mm=75.4, wind_speed_kmh=85.2)
+    
+    if new_route != route:
+        update_shipment_status("rerouting")
 
     return {
         "status": "weather_event_triggered",

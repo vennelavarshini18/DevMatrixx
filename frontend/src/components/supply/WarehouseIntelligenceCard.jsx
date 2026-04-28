@@ -4,9 +4,9 @@ import { Brain, ChevronDown, ChevronUp } from 'lucide-react';
 const METRICS = [
   { label: 'Network', value: '22 Cities, 50+ Highways', bar: false },
   { label: 'Warehouses', value: '10 locations', bar: false },
-  { label: 'Selection Logic', value: 'Dijkstra + Risk Penalty', bar: false },
-  { label: 'Risk Model', value: 'LightGBM Disruptor', bar: false },
-  { label: 'Queue Impact', value: '+30m per pending order', bar: false },
+  { label: 'Selection Logic', value: 'XGBoost Heuristic', bar: false },
+  { label: 'Base Algorithm', value: 'XGBoost (P1)', bar: false },
+  { label: 'Queue Impact', value: '+10% distance penalty / order', bar: false },
   { label: 'Last Mile', value: 'Haversine local avg', bar: false },
 ];
 
@@ -27,7 +27,7 @@ export default function WarehouseIntelligenceCard() {
       {/* Model name */}
       <div className="flex items-center gap-2 mb-4 p-2.5 bg-white/[0.04] rounded-xl border border-white/[0.06]">
         <Brain className="w-4 h-4 text-blue-300" />
-        <span className="text-sm text-white font-semibold">Model: Dijkstra + LightGBM</span>
+        <span className="text-sm text-white font-semibold">Model: XGBoost (P1 Classifier)</span>
       </div>
 
       {/* Metrics */}
@@ -68,9 +68,9 @@ export default function WarehouseIntelligenceCard() {
           style={{ maxHeight: expanded ? '200px' : '0px', opacity: expanded ? 1 : 0 }}
         >
           <p className="text-xs text-gray-500 font-mono leading-relaxed mt-3 p-3 bg-white/[0.02] rounded-lg border border-white/[0.04]">
-            For each new order, WareFlow analyzes paths from 10 warehouses across 22 major Indian cities.
-            It uses Dijkstra's algorithm augmented by the LightGBM Disruptor Model which penalizes disrupted 
-            highway edges. The final choice incorporates distance, current queue depth, stock availability, and weather risk.
+            For each new order, WareFlow evaluates available stock across the 10-warehouse network. 
+            The P1 Warehouse Selector applies a routing heuristic trained via XGBoost: it evaluates the baseline delivery time 
+            and dynamically adds a 10% geographical distance penalty for every single order currently pending in that warehouse's queue.
           </p>
         </div>
       </div>

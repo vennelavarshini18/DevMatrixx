@@ -105,9 +105,7 @@ export default function DisruptionCard() {
   const risk = getRiskConfig(riskScore);
 
   return (
-    <div
-      className={`absolute top-6 right-6 z-[110] pointer-events-auto transition-all duration-300 ${expanded ? 'w-80' : 'w-52'}`}
-    >
+    <div className="w-full pointer-events-auto transition-all duration-300">
       <div className={`bg-[#0a0b14]/95 backdrop-blur-xl rounded-xl border border-white/[0.08] overflow-hidden ${risk.glow} transition-shadow duration-500`}>
 
         {/* ── Header ─────────────────────────────────────────────────── */}

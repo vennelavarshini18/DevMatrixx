@@ -148,17 +148,24 @@ async def orchestrator_loop():
     while True:
         # Try to pull from centralized queue if local queue is empty
         if robot_state["status"] == "idle" and len(order_queue) == 0:
-            next_order_id = get_warehouse_next_order(RL_WAREHOUSE_ID)
-            if next_order_id:
-                central_order = get_order(next_order_id)
-                if central_order:
-                    update_order_status(next_order_id, "picking")
-                    order_queue.append({
-                        "category": central_order.get("category", "grocery"),
-                        "item": central_order.get("items", ["Item"])[0] if central_order.get("items") else "Item",
-                        "order_id": next_order_id,
-                    })
-                    print(f"[ORCHESTRATOR] Pulled order {next_order_id} from central queue")
+            import httpx
+            try:
+                # Poll the 8001 gateway for the next order
+                with httpx.Client() as client:
+                    res = client.get(f"http://localhost:8001/warehouses/{RL_WAREHOUSE_ID}/next-order", timeout=2.0)
+                if res.status_code == 200:
+                    data = res.json()
+                    next_order_id = data.get("order_id")
+                    if next_order_id:
+                        central_order = data.get("order", {})
+                        order_queue.append({
+                            "category": central_order.get("category", "grocery"),
+                            "item": central_order.get("items", ["Item"])[0] if central_order.get("items") else "Item",
+                            "order_id": next_order_id,
+                        })
+                        print(f"[ORCHESTRATOR] Pulled order {next_order_id} from central API (8001)")
+            except Exception:
+                pass # Silent fail if 8001 is offline or busy
 
         if robot_state["status"] == "idle" and len(order_queue) > 0:
             order_data = order_queue.pop(0)
@@ -248,27 +255,30 @@ async def orchestrator_loop():
                 
             if done:
                 # 3. DELIVERED
-                # Update centralized inventory
+                # Decrement local process inventory for UI sync
                 cat_id = order_data["category"]
-                deduct_inventory(RL_WAREHOUSE_ID, cat_id)
+                if cat_id in WAREHOUSES[RL_WAREHOUSE_ID]["inventory"]:
+                    WAREHOUSES[RL_WAREHOUSE_ID]["inventory"][cat_id] = max(0, WAREHOUSES[RL_WAREHOUSE_ID]["inventory"][cat_id] - 1)
+
                 robot_state["carrying"] = None
                 robot_state["status"] = "delivered"
                 await send_broadcast()
                 
-                # Notify centralized system
+                # Notify centralized system (8001 Gateway)
                 oid = order_data.get("order_id")
                 if oid:
-                    update_order_status(oid, "dispatched")
-                    # Try to start delivery via the unified API
+                    import httpx
                     try:
-                        import httpx
-                        async with httpx.AsyncClient() as client:
-                            await client.post(f"http://localhost:8001/order/{oid}/start-delivery", timeout=5)
-                            print(f"[ORCHESTRATOR] Started delivery for {oid}")
+                        with httpx.Client() as client:
+                            client.post(f"http://localhost:8001/order/{oid}/warehouse-complete", timeout=3.0)
+                        print(f"[ORCHESTRATOR] Notified 8001 that {oid} is complete & dispatched!")
                     except Exception as e:
-                        print(f"[ORCHESTRATOR] Could not start delivery for {oid}: {e}")
+                        print(f"[ORCHESTRATOR] Failed to notify 8001 of completion: {e}")
                 
-                await asyncio.sleep(3.0) # Pause so UI can show the success toast
+                # Tiny pause before next loop iteration
+                await asyncio.sleep(1.0)
+                robot_state["status"] = "idle"
+                await send_broadcast()
             else:
                 # Failed to return (timed out)
                 robot_state["carrying"] = None

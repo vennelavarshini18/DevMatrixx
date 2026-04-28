@@ -89,7 +89,6 @@ const API_BASE = 'http://localhost:8001';
 export default function NexusStorefront({ onOrderPlaced }) {
   const [inventory, setInventory] = useState({});
   const [loading, setLoading] = useState(true);
-  const [orderConfirmation, setOrderConfirmation] = useState(null);
 
   useEffect(() => {
     // Fetch aggregated inventory from unified API
@@ -128,14 +127,7 @@ export default function NexusStorefront({ onOrderPlaced }) {
         })
       });
       if (res.ok) {
-        const data = await res.json();
-        setOrderConfirmation(data);
-        
-        // Auto-dismiss confirmation and navigate
-        setTimeout(() => {
-          setOrderConfirmation(null);
-          if(onOrderPlaced) onOrderPlaced();
-        }, 3000);
+        if(onOrderPlaced) onOrderPlaced();
       } else {
         const errorData = await res.json();
         alert(`Failed: ${errorData.detail || errorData.error}`);
@@ -166,24 +158,6 @@ export default function NexusStorefront({ onOrderPlaced }) {
       
       {/* Background vignette wrapper to simulate dark warehouse alley */}
       <div className="fixed inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-transparent via-[#000000d0] to-[#000000] z-0"></div>
-
-      {/* Order Confirmation Toast */}
-      {orderConfirmation && (
-        <div className="fixed top-6 right-6 z-50 animate-[slideIn_0.4s_ease-out] max-w-sm">
-          <div className="bg-emerald-950/90 backdrop-blur-md border border-emerald-500/40 rounded-xl p-4 shadow-[0_0_30px_rgba(16,185,129,0.15)]">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-emerald-400 text-lg">✅</span>
-              <span className="text-sm font-bold text-emerald-300 tracking-wide uppercase">Order Placed!</span>
-            </div>
-            <div className="space-y-1 text-xs font-mono text-gray-300">
-              <div>Warehouse: <span className="text-emerald-400 font-bold">{orderConfirmation.warehouse_city || orderConfirmation.warehouse}</span></div>
-              <div>Route: <span className="text-blue-400">{(orderConfirmation.route || []).join(' → ')}</span></div>
-              <div>ETA: <span className="text-amber-400">{orderConfirmation.eta}</span></div>
-              <div>Queue: <span className="text-purple-400">#{orderConfirmation.queue_position}</span></div>
-            </div>
-          </div>
-        </div>
-      )}
 
       <div className="max-w-7xl mx-auto relative z-10">
         <header className="mb-16 mt-8 flex flex-col items-center border-b border-gray-800/50 pb-8">
@@ -269,12 +243,6 @@ export default function NexusStorefront({ onOrderPlaced }) {
         </div>
       </div>
 
-      <style>{`
-        @keyframes slideIn {
-          from { transform: translateX(100%); opacity: 0; }
-          to { transform: translateX(0); opacity: 1; }
-        }
-      `}</style>
     </div>
   );
 }
