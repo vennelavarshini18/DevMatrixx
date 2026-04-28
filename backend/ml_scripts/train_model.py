@@ -26,7 +26,7 @@ MODEL_DIR = os.path.join(SCRIPT_DIR, "..", "models")
 MODEL_FILE = os.path.join(MODEL_DIR, "disruption_predictor.pkl")
 PLOT_FILE = os.path.join(MODEL_DIR, "feature_importance.png")
 
-FEATURES = ["base_travel_time", "precipitation_mm", "wind_speed_kmh"]
+FEATURES = ["base_travel_time", "precipitation_mm", "wind_speed_kmh", "traffic_congestion_ratio"]
 TARGET = "risk_score"
 
 

@@ -1,0 +1,7 @@
+- [x] Update `gemini_service.py` to handle `traffic_congestion_ratio`
+- [x] Add `Trigger Traffic` to `useSupplyChainData.js`
+- [x] Add `Trigger Traffic` button to `SupplyChainDashboard.jsx`
+- [x] Display `Traffic Congestion` in `DisruptionCard.jsx`
+- [x] Update `backend/.env` with `GOOGLE_MAPS_API_KEY=`
+- [x] Add `httpx` to `backend/requirements.txt`
+- [x] Ensure backend runs with new API

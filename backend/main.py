@@ -353,6 +353,7 @@ else:
     print(f"[P2] WARNING: Model not found at {_DISRUPTION_MODEL_PATH}")
 
 from utils.weather_service import fetch_live_weather
+from utils.traffic_service import fetch_traffic_for_city
 from utils.gemini_service import generate_disruption_alert
 from utils.firebase_service import push_disruption_to_firebase
 
@@ -368,6 +369,7 @@ class WeatherEventRequest(BaseModel):
     # Optional overrides for simulation
     precipitation_mm: Optional[float] = None
     wind_speed_kmh: Optional[float] = None
+    traffic_congestion_ratio: Optional[float] = None
 
 
 @app.post("/api/supply/trigger-weather-event")
@@ -398,8 +400,18 @@ async def trigger_weather_event(req: WeatherEventRequest):
     print(f"[P2] Weather at {req.city} ({req.lat}, {req.lng}): "
           f"precip={precip}mm, wind={wind}km/h")
 
-    # Step 2: Predict risk with LightGBM
-    features = np.array([[req.base_travel_time, precip, wind]])
+    # Step 1b: Fetch live traffic (or use override)
+    if req.traffic_congestion_ratio is not None:
+        congestion = req.traffic_congestion_ratio
+        traffic = {"congestion_ratio": congestion, "segment": f"{req.city} area", "source": "override"}
+    else:
+        traffic = fetch_traffic_for_city(req.city)
+        congestion = traffic["congestion_ratio"]
+
+    print(f"[P2] Traffic at {req.city}: congestion={congestion:.2f}x ({traffic.get('source', 'unknown')})")
+
+    # Step 2: Predict risk with LightGBM (4 features: travel_time, precip, wind, traffic)
+    features = np.array([[req.base_travel_time, precip, wind, congestion]])
     risk_score = float(_disruption_model.predict(features)[0])
     risk_score = max(0.0, min(1.0, risk_score))  # clamp to [0, 1]
     print(f"[P2] Predicted risk_score = {risk_score:.4f}")
@@ -415,10 +427,18 @@ async def trigger_weather_event(req: WeatherEventRequest):
             base_travel_time=req.base_travel_time,
             source=req.source,
             destination=req.destination,
+            traffic_congestion_ratio=congestion,
         )
         print(f"[P2] Gemini alert generated: {gemini_alert[:80]}...")
     else:
-        gemini_alert = f"All clear at {req.city}. Risk score {risk_score:.0%}. No disruption detected."
+        # Build informative low-risk message
+        parts = []
+        if precip > 5:
+            parts.append(f"light rain ({precip:.0f}mm)")
+        if congestion > 1.3:
+            parts.append(f"mild traffic ({congestion:.1f}x)")
+        condition = ", ".join(parts) if parts else "clear conditions"
+        gemini_alert = f"All clear at {req.city}. {condition.capitalize()}. Risk score {risk_score:.0%}. No disruption detected."
 
     # Step 4: Write to Firebase (P3 and P4 read from here)
     fb_result = push_disruption_to_firebase(
@@ -465,6 +485,7 @@ async def trigger_weather_event(req: WeatherEventRequest):
         "status": "ok",
         "city": req.city,
         "weather": weather,
+        "traffic": traffic,
         "risk_score": risk_score,
         "risk_level": "CRITICAL" if risk_score > 0.8 else "HIGH" if risk_score > 0.7 else "MODERATE" if risk_score > 0.4 else "LOW",
         "gemini_alert": gemini_alert,

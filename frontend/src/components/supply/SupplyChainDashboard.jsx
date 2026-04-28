@@ -16,7 +16,7 @@ const P2_API = 'http://localhost:8000';
 export default function SupplyChainDashboard({ onBack }) {
   const {
     shipment, graphInfo, queues, loading, error, serverOnline,
-    triggerWeatherEvent, startSimulation, stopSimulation, resetShipment,
+    triggerWeatherEvent, triggerTrafficEvent, startSimulation, stopSimulation, resetShipment,
   } = useSupplyChainData();
 
   const [demoLoading, setDemoLoading] = useState(null);
@@ -119,12 +119,12 @@ export default function SupplyChainDashboard({ onBack }) {
       <div className="flex-1 flex overflow-hidden">
 
         {/* ── LEFT: NETWORK MAP ─────────────────────────────────────── */}
-        <div className="flex-1 p-3 min-w-0">
+        <div className="flex-1 p-1 min-w-0">
           <SupplyMap shipment={shipment} />
         </div>
 
         {/* ── RIGHT: SIDEBAR PANELS ─────────────────────────────────── */}
-        <div className="w-[320px] flex-shrink-0 overflow-y-auto border-l border-white/5 bg-[#080810]/50 p-4 flex flex-col gap-3">
+        <div className="w-[380px] flex-shrink-0 overflow-y-auto border-l border-white/5 bg-[#080810]/50 p-3 flex flex-col gap-3">
 
           {/* ── SHIPMENT STATUS ──────── */}
           <Panel title="ACTIVE SHIPMENT">
@@ -200,7 +200,7 @@ export default function SupplyChainDashboard({ onBack }) {
           </Panel>
 
           {/* ── DISRUPTION INTEL ────── */}
-          <DisruptionCard />
+          <DisruptionCard shipment={shipment} />
 
           {/* ── GEMINI ALERT ────────── */}
           {shipment?.gemini_alert && (
@@ -229,10 +229,18 @@ export default function SupplyChainDashboard({ onBack }) {
               <DemoButton
                 label="Trigger Storm"
                 icon="⛈️"
-                sublabel="Agra–Delhi highway"
+                sublabel="Scan route via LightGBM"
                 loading={demoLoading === 'storm'}
                 onClick={() => handleAction('storm', triggerWeatherEvent)}
                 color="red"
+              />
+              <DemoButton
+                label="Trigger Traffic"
+                icon="🚗"
+                sublabel="Simulate heavy congestion"
+                loading={demoLoading === 'traffic'}
+                onClick={() => handleAction('traffic', triggerTrafficEvent)}
+                color="amber"
               />
               <DemoButton
                 label="Reset Shipment"
@@ -291,6 +299,7 @@ function DemoButton({ label, icon, sublabel, loading, onClick, color }) {
     blue: 'border-blue-500/30 hover:border-blue-400/60 hover:bg-blue-950/30 text-blue-400',
     red: 'border-red-500/30 hover:border-red-400/60 hover:bg-red-950/30 text-red-400',
     gray: 'border-gray-600/30 hover:border-gray-500/60 hover:bg-gray-900/30 text-gray-400',
+    amber: 'border-amber-500/30 hover:border-amber-400/60 hover:bg-amber-950/30 text-amber-400',
   };
   return (
     <button

@@ -60,6 +60,7 @@ def generate_disruption_alert(
     base_travel_time: float,
     source: str = "Lucknow",
     destination: str = "Delhi",
+    traffic_congestion_ratio: float = 1.0,
 ) -> str:
     """
     Generate a professional logistics disruption alert using Google Gemini.
@@ -76,6 +77,7 @@ def generate_disruption_alert(
         base_travel_time: Base travel time on the affected segment (hours)
         source: Shipment origin city
         destination: Shipment destination city
+        traffic_congestion_ratio: Traffic congestion multiplier (1.0 = normal)
 
     Returns:
         A professional alert string for Firebase / dashboard display.
@@ -91,7 +93,7 @@ def generate_disruption_alert(
         severity = "MODERATE"
         urgency = "Monitor closely"
 
-    # Determine weather cause
+    # Determine weather and traffic cause
     causes = []
     if precipitation_mm > 50:
         causes.append(f"{precipitation_mm:.1f}mm rainfall (heavy)")
@@ -101,7 +103,12 @@ def generate_disruption_alert(
         causes.append(f"{wind_speed_kmh:.1f} km/h winds (dangerous)")
     elif wind_speed_kmh > 40:
         causes.append(f"{wind_speed_kmh:.1f} km/h winds (elevated)")
-    cause_text = " and ".join(causes) if causes else "adverse weather conditions"
+    if traffic_congestion_ratio > 2.0:
+        causes.append(f"{traffic_congestion_ratio:.1f}x severe traffic congestion on {source}–{destination} segment")
+    elif traffic_congestion_ratio > 1.3:
+        causes.append(f"{traffic_congestion_ratio:.1f}x traffic congestion on {source}–{destination} segment")
+        
+    cause_text = " and ".join(causes) if causes else "adverse conditions"
 
     # Estimated delay
     delay_hours = round(base_travel_time * risk_score, 1)

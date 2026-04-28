@@ -12,29 +12,29 @@ import React, { useMemo } from 'react';
 // Mapped from real lat/lng to SVG coordinates
 const CITY_POS = {
   // Warehouse cities (10)
-  Delhi:         { x: 310, y: 95 },
-  Mumbai:        { x: 145, y: 415 },
-  Bangalore:     { x: 330, y: 600 },
-  Hyderabad:     { x: 350, y: 480 },
-  Chennai:       { x: 440, y: 580 },
-  Kolkata:       { x: 690, y: 310 },
-  Lucknow:       { x: 455, y: 175 },
-  Jaipur:        { x: 190, y: 190 },
-  Ahmedabad:     { x: 115, y: 310 },
-  Pune:          { x: 180, y: 470 },
+  Delhi:         { x: 380, y: 60 },
+  Mumbai:        { x: 120, y: 440 },
+  Bangalore:     { x: 370, y: 670 },
+  Hyderabad:     { x: 400, y: 520 },
+  Chennai:       { x: 520, y: 640 },
+  Kolkata:       { x: 820, y: 300 },
+  Lucknow:       { x: 540, y: 140 },
+  Jaipur:        { x: 200, y: 160 },
+  Ahmedabad:     { x: 90, y: 300 },
+  Pune:          { x: 170, y: 510 },
   // Transit cities (12)
-  Agra:          { x: 325, y: 170 },
-  Kanpur:        { x: 430, y: 210 },
-  Varanasi:      { x: 555, y: 250 },
-  Prayagraj:     { x: 510, y: 265 },
-  Gwalior:       { x: 315, y: 225 },
-  Nagpur:        { x: 375, y: 395 },
-  Indore:        { x: 230, y: 330 },
-  Bhopal:        { x: 295, y: 310 },
-  Patna:         { x: 600, y: 210 },
-  Surat:         { x: 130, y: 370 },
-  Nashik:        { x: 160, y: 430 },
-  Visakhapatnam: { x: 530, y: 460 },
+  Agra:          { x: 370, y: 150 },
+  Kanpur:        { x: 505, y: 195 },
+  Varanasi:      { x: 660, y: 230 },
+  Prayagraj:     { x: 610, y: 260 },
+  Gwalior:       { x: 355, y: 210 },
+  Nagpur:        { x: 420, y: 400 },
+  Indore:        { x: 240, y: 330 },
+  Bhopal:        { x: 320, y: 300 },
+  Patna:         { x: 720, y: 190 },
+  Surat:         { x: 105, y: 380 },
+  Nashik:        { x: 145, y: 460 },
+  Visakhapatnam: { x: 640, y: 490 },
 };
 
 // ─── ALL HIGHWAY EDGES (matches expanded graph_engine.py) ────────────────
@@ -100,7 +100,7 @@ export default function SupplyMap({ shipment }) {
         <div className="absolute top-[50%] left-[10%] w-[200px] h-[200px] bg-purple-500/3 rounded-full blur-[80px]" />
       </div>
 
-      <svg viewBox="0 0 900 700" className="w-full h-full" style={{ filter: 'drop-shadow(0 0 2px rgba(59,130,246,0.1))' }}>
+      <svg viewBox="30 10 870 710" preserveAspectRatio="xMidYMid meet" className="w-full h-full" style={{ filter: 'drop-shadow(0 0 2px rgba(59,130,246,0.1))' }}>
         <defs>
           {/* Route glow filter */}
           <filter id="routeGlow" x="-20%" y="-20%" width="140%" height="140%">
@@ -302,7 +302,7 @@ export default function SupplyMap({ shipment }) {
         )}
 
         {/* ── MAP LEGEND ───────────────────────────────────────── */}
-        <g transform="translate(20, 660)">
+        <g transform="translate(40, 700)">
           <rect x="0" y="-10" width="260" height="35" rx="6" fill="#0f172a" opacity="0.7" />
           <circle cx="15" cy="5" r="3" fill="#475569" />
           <text x="25" y="9" fill="#64748b" fontSize="8" fontFamily="monospace">City</text>
@@ -315,7 +315,7 @@ export default function SupplyMap({ shipment }) {
         </g>
 
         {/* City count label */}
-        <text x="880" y="690" fill="#334155" fontSize="8" fontFamily="monospace" textAnchor="end">
+        <text x="880" y="715" fill="#334155" fontSize="8" fontFamily="monospace" textAnchor="end">
           {Object.keys(CITY_POS).length} Cities · {ALL_EDGES.length} Highways · 10 Warehouses
         </text>
       </svg>
